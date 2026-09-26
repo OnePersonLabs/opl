@@ -29,15 +29,26 @@ def main():
         print("{}")
         return
     messages = {
-        "setup": "OPL instructions are not set up in your active global instructions. Run $opl:update-instructions to reconcile them.",
-        "update": f"OPL instructions version {state['bundled_version']} is available (your baseline: {state['user_version']}). Run $opl:update-instructions to review the update.",
+        "setup": "OPL instructions are not set up in your active global instructions.",
+        "update": f"OPL instructions version {state['bundled_version']} is available (your baseline: {state['user_version']}).",
         "newer": f"Your OPL instructions baseline ({state['user_version']}) is newer than installed OPL ({state['bundled_version']}). Keep your instructions; update the installed plugin rather than downgrade them.",
-        "invalid": "Your OPL instructions version marker is invalid. Run $opl:update-instructions to reconcile the metadata.",
+        "invalid": "Your OPL instructions version marker is invalid.",
     }
     message = messages[state["status"]] + f" File: {state['target']}"
+    if state["status"] in {"setup", "update", "invalid"}:
+        guidance = (
+            " Before continuing the user's pending task, briefly notify the user and ask whether "
+            "they want to review and update their OPL global instructions now. Stop and wait for "
+            "the reply. If the user agrees, run $opl:update-instructions to completion. If the user "
+            "declines, do not run the skill. After either branch is complete, resume the user's "
+            "pending task. The initial agreement starts the review only; apply no instruction change "
+            "until the skill obtains approval for its candidate."
+        )
+    else:
+        guidance = " Briefly notify the user and continue the pending task; do not downgrade or change instructions automatically."
     print(json.dumps({"systemMessage": message, "hookSpecificOutput": {
         "hookEventName": event,
-        "additionalContext": message + " Notify the user briefly; do not update instructions automatically.",
+        "additionalContext": message + guidance,
     }}))
 
 

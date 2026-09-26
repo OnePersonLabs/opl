@@ -25,6 +25,18 @@ function fixture(t) {
   return { root, home, installed, target, env, run }
 }
 
+function assertOptInContext(output) {
+  const context = output.hookSpecificOutput.additionalContext
+  assert.match(context, /ask whether.*review.*now/iu)
+  assert.match(context, /stop and wait for.*reply/iu)
+  assert.match(context, /if the user agrees.*\$opl:update-instructions/iu)
+  assert.match(context, /if the user declines.*do not run/iu)
+  assert.match(context, /resume the user.+pending task/iu)
+  assert.match(context, /initial agreement.*review only.*candidate/iu)
+  assert.ok(!context.includes('Run $opl:update-instructions to review the update.'))
+  return context
+}
+
 for (const source of ['startup', 'resume', 'clear', 'compact']) {
   test(`local update notice for ${source} preserves user instructions`, (t) => {
     const f = fixture(t)
@@ -34,8 +46,8 @@ for (const source of ['startup', 'resume', 'clear', 'compact']) {
     assert.equal(result.status, 0, result.stderr)
     const output = JSON.parse(result.stdout)
     assert.match(output.systemMessage, /version 3.*baseline: 1/u)
-    assert.match(output.hookSpecificOutput.additionalContext, /\$opl:update-instructions/u)
-    assert.ok(!output.hookSpecificOutput.additionalContext.includes('Keep café'))
+    const context = assertOptInContext(output)
+    assert.ok(!context.includes('Keep café'))
     assert.equal(readFileSync(f.target, 'utf8'), original)
   })
 }
@@ -50,9 +62,13 @@ test('matching version stays silent and newer version does not suggest downgrade
 
 test('missing and malformed markers are actionable; override takes precedence', (t) => {
   const f = fixture(t)
-  assert.match(JSON.parse(f.run().stdout).systemMessage, /not set up/u)
+  const missing = JSON.parse(f.run().stdout)
+  assert.match(missing.systemMessage, /not set up/u)
+  assertOptInContext(missing)
   writeFileSync(f.target, text(1) + text(2))
-  assert.match(JSON.parse(f.run().stdout).systemMessage, /invalid/u)
+  const malformed = JSON.parse(f.run().stdout)
+  assert.match(malformed.systemMessage, /invalid/u)
+  assertOptInContext(malformed)
   writeFileSync(join(f.home, 'AGENTS.override.md'), text(3))
   assert.deepEqual(JSON.parse(f.run().stdout), {})
 })
