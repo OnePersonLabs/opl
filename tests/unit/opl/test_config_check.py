@@ -117,6 +117,42 @@ class ConfigCheckTests(unittest.TestCase):
         self.assertEqual({key: result["agents"][key] for key in defaults["agents"]}, defaults["agents"])
         self.assertIn("opl-role", result["agents"])
 
+    def test_shipped_defaults_apply_sol_medium_without_managing_features(self):
+        plugin = ROOT / "plugins" / "opl"
+        expected = {
+            "features": {},
+            "agents": {
+                "default_subagent_model": "gpt-6-sol",
+                "default_subagent_reasoning_effort": "medium",
+            },
+        }
+        self.assertEqual(checker.load_defaults(plugin), expected)
+        application_spec = importlib.util.spec_from_file_location(
+            "shipped_harness_application", plugin / "skills/configure-harness/scripts/application.py"
+        )
+        application = importlib.util.module_from_spec(application_spec)
+        application_spec.loader.exec_module(application)
+        self.assertEqual(application._load_config_defaults(), expected)
+        self.config.write_text(
+            'sandbox_mode = "workspace-write"\n'
+            '[features]\nmulti_agent = false\nhooks = false\n'
+            '[agents]\ndefault_subagent_model = "gpt-6-luna"\n'
+            'default_subagent_reasoning_effort = "high"\n',
+            encoding="utf-8",
+        )
+        report, status = checker.command_check(self.home, plugin)
+        self.assertEqual(status, 1)
+        self.assertFalse(any(item["path"].startswith("features.") for item in report["findings"]))
+        _, status = checker.command_fix(self.home, plugin)
+        self.assertEqual(status, 0)
+        result = self.parsed()
+        self.assertEqual(result["features"], {"multi_agent": False, "hooks": False})
+        self.assertEqual(result["sandbox_mode"], "workspace-write")
+        for key, value in expected["agents"].items():
+            self.assertEqual(result["agents"][key], value)
+        _, status = checker.command_check(self.home, plugin)
+        self.assertEqual(status, 0)
+
     def test_invalid_complete_inventory_does_not_remove_registered_roles(self):
         self.config.write_text("[agents.opl-stale]\nconfig_file = \"C:/stale.toml\"\n", encoding="utf-8")
         (self.plugin / "agents" / "broken.toml").write_text(
