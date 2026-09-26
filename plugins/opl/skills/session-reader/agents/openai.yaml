@@ -1,0 +1,7 @@
+interface:
+  display_name: "Session Reader"
+  short_description: "Search and read large Codex session logs safely"
+  default_prompt: "Use $session-reader to find and extract the relevant messages from my Codex session history."
+
+policy:
+  allow_implicit_invocation: true

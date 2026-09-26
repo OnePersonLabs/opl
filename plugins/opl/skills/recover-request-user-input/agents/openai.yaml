@@ -1,0 +1,5 @@
+interface:
+  display_name: "Request Input Recovery"
+  short_description: "Recover from unavailable native question prompts"
+policy:
+  allow_implicit_invocation: true

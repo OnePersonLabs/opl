@@ -1,0 +1,7 @@
+interface:
+  display_name: "De-AI Writing"
+  short_description: "Write natural prose without common AI tells"
+  default_prompt: "Use $de-ai-writing to write or revise this human-facing prose in a natural voice."
+
+policy:
+  allow_implicit_invocation: true

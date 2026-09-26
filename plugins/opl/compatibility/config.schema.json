@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OPL project configuration",
+  "description": "Configuration at .opl/config.json. Other configuration keys remain available to their owners. Compatibility policies are declarative and never install or activate capabilities.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "codex": {
+      "type": "object",
+      "properties": { "compatibility": { "$ref": "#/$defs/policy" } },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "text": { "type": "string", "minLength": 1, "maxLength": 4096, "pattern": "\\S" },
+    "pluginId": {
+      "type": "string",
+      "maxLength": 4096,
+      "pattern": "^[^@\\s/\\\\]+@[^@\\s/\\\\]+$"
+    },
+    "absolutePath": {
+      "type": "string",
+      "maxLength": 4096,
+      "description": "An absolute POSIX, drive-rooted Windows, or UNC skill path. Windows drive and UNC paths compare without case sensitivity.",
+      "pattern": "^(?:/|[A-Za-z]:[/\\\\]|\\\\\\\\[^\\\\/]+[/\\\\][^\\\\/]+[/\\\\]?)"
+    },
+    "identity": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["plugin", "skill", "mcp"] },
+        "id": { "$ref": "#/$defs/pluginId" },
+        "name": { "$ref": "#/$defs/text" },
+        "plugin": { "$ref": "#/$defs/pluginId" },
+        "path": { "$ref": "#/$defs/absolutePath" }
+      },
+      "oneOf": [
+        {
+          "properties": { "kind": { "const": "plugin" } },
+          "required": ["id"],
+          "not": { "anyOf": [{ "required": ["name"] }, { "required": ["plugin"] }, { "required": ["path"] }] }
+        },
+        {
+          "properties": { "kind": { "const": "skill" } },
+          "required": ["name"],
+          "not": { "required": ["id"] }
+        },
+        {
+          "properties": { "kind": { "const": "mcp" } },
+          "required": ["name"],
+          "not": { "anyOf": [{ "required": ["id"] }, { "required": ["path"] }] }
+        }
+      ]
+    },
+    "selector": { "$ref": "#/$defs/identity", "unevaluatedProperties": false },
+    "entry": {
+      "$ref": "#/$defs/identity",
+      "properties": { "reason": { "$ref": "#/$defs/text" } },
+      "unevaluatedProperties": false
+    },
+    "conditionalEntry": {
+      "$ref": "#/$defs/identity",
+      "properties": {
+        "reason": { "$ref": "#/$defs/text" },
+        "whenEnabled": { "$ref": "#/$defs/block1" }
+      },
+      "unevaluatedProperties": false
+    },
+    "entryArray": { "type": "array", "maxItems": 1000, "default": [], "items": { "$ref": "#/$defs/entry" } },
+    "conditionalArray": { "type": "array", "maxItems": 1000, "default": [], "items": { "$ref": "#/$defs/conditionalEntry" } },
+    "block": {
+      "type": "object",
+      "properties": {
+        "required": { "$ref": "#/$defs/conditionalArray" },
+        "recommended": { "$ref": "#/$defs/conditionalArray" },
+        "disallowed": { "$ref": "#/$defs/entryArray" }
+      },
+      "additionalProperties": false
+    },
+    "block1": {
+      "$ref": "#/$defs/block",
+      "properties": {
+        "required": { "items": { "properties": { "whenEnabled": { "$ref": "#/$defs/block2" } } } },
+        "recommended": { "items": { "properties": { "whenEnabled": { "$ref": "#/$defs/block2" } } } }
+      }
+    },
+    "block2": {
+      "$ref": "#/$defs/block",
+      "properties": {
+        "required": { "items": { "properties": { "whenEnabled": { "$ref": "#/$defs/block3" } } } },
+        "recommended": { "items": { "properties": { "whenEnabled": { "$ref": "#/$defs/block3" } } } }
+      }
+    },
+    "block3": {
+      "$ref": "#/$defs/block",
+      "properties": {
+        "required": { "items": { "properties": { "whenEnabled": { "$ref": "#/$defs/block4" } } } },
+        "recommended": { "items": { "properties": { "whenEnabled": { "$ref": "#/$defs/block4" } } } }
+      }
+    },
+    "block4": {
+      "$ref": "#/$defs/block",
+      "properties": {
+        "required": { "items": { "properties": { "whenEnabled": { "$ref": "#/$defs/block5" } } } },
+        "recommended": { "items": { "properties": { "whenEnabled": { "$ref": "#/$defs/block5" } } } }
+      }
+    },
+    "block5": {
+      "$ref": "#/$defs/block",
+      "properties": {
+        "required": { "items": { "properties": { "whenEnabled": { "$ref": "#/$defs/block6" } } } },
+        "recommended": { "items": { "properties": { "whenEnabled": { "$ref": "#/$defs/block6" } } } }
+      }
+    },
+    "block6": {
+      "$ref": "#/$defs/block",
+      "properties": {
+        "required": { "items": { "properties": { "whenEnabled": { "$ref": "#/$defs/block7" } } } },
+        "recommended": { "items": { "properties": { "whenEnabled": { "$ref": "#/$defs/block7" } } } }
+      }
+    },
+    "block7": {
+      "$ref": "#/$defs/block",
+      "properties": {
+        "required": { "items": { "properties": { "whenEnabled": { "$ref": "#/$defs/block8" } } } },
+        "recommended": { "items": { "properties": { "whenEnabled": { "$ref": "#/$defs/block8" } } } }
+      }
+    },
+    "block8": {
+      "type": "object",
+      "properties": {
+        "required": { "$ref": "#/$defs/entryArray" },
+        "recommended": { "$ref": "#/$defs/entryArray" },
+        "disallowed": { "$ref": "#/$defs/entryArray" }
+      },
+      "additionalProperties": false
+    },
+    "rule": {
+      "type": "object",
+      "required": ["id", "whenEnabled"],
+      "properties": {
+        "id": { "$ref": "#/$defs/text" },
+        "whenEnabled": { "$ref": "#/$defs/selector" },
+        "reason": { "$ref": "#/$defs/text" },
+        "required": { "$ref": "#/$defs/conditionalArray" },
+        "recommended": { "$ref": "#/$defs/conditionalArray" },
+        "disallowed": { "$ref": "#/$defs/entryArray" }
+      },
+      "additionalProperties": false
+    },
+    "policy": {
+      "type": "object",
+      "description": "At most 1000 selector and ignore declarations in total, at most eight nested whenEnabled blocks, and unique rule IDs. Ignore IDs are checked after project and built-in rules are combined.",
+      "required": ["version"],
+      "properties": {
+        "$schema": { "$ref": "#/$defs/text" },
+        "version": { "type": "integer", "const": 1 },
+        "onViolation": { "enum": ["warn", "acknowledge"], "default": "acknowledge" },
+        "required": { "$ref": "#/$defs/conditionalArray" },
+        "recommended": { "$ref": "#/$defs/conditionalArray" },
+        "disallowed": { "$ref": "#/$defs/entryArray" },
+        "rules": { "type": "array", "maxItems": 1000, "default": [], "items": { "$ref": "#/$defs/rule" } },
+        "ignoreRules": {
+          "type": "array",
+          "maxItems": 1000,
+          "default": [],
+          "items": {
+            "type": "object",
+            "required": ["id", "reason"],
+            "properties": { "id": { "$ref": "#/$defs/text" }, "reason": { "$ref": "#/$defs/text" } },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

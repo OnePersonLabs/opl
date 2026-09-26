@@ -1,0 +1,7 @@
+interface:
+  display_name: "Unslop Session Audit"
+  short_description: "Audit a whole session for systemic agent failures"
+  default_prompt: "Use $unslop-session-audit to analyze the session and identify systemic agent failure patterns."
+
+policy:
+  allow_implicit_invocation: false

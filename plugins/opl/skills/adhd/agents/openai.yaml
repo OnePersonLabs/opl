@@ -1,0 +1,7 @@
+interface:
+  display_name: "ADHD"
+  short_description: "Reduce overload to one finishable active path"
+  default_prompt: "Use $adhd to turn this into one active path, preserve what matters, and give me a clear stopping point."
+
+policy:
+  allow_implicit_invocation: true

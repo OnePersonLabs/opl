@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "id": "opl.last30days.alternatives",
+      "whenEnabled": {
+        "kind": "skill",
+        "name": "last30days",
+        "plugin": "opl@opl",
+        "path": "${PLUGIN_ROOT}/skills/last30days/SKILL.md"
+      },
+      "reason": "Multiple enabled $last30days skills compete for the same invocation. Keep OPL's $last30days enabled and disable the other copies through Codex's skill controls.",
+      "disallowed": [
+        { "kind": "skill", "name": "last30days" }
+      ]
+    }
+  ]
+}

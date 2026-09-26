@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "id": "opl.debug.alternatives",
+      "whenEnabled": { "kind": "skill", "name": "debug", "plugin": "opl@opl" },
+      "reason": "These debugging workflows have overlapping activation scopes. Choose the workflow you want Codex to select.",
+      "disallowed": [
+        { "kind": "skill", "name": "debug" },
+        { "kind": "skill", "name": "systematic-debugging" },
+        { "kind": "skill", "name": "diagnosing-bugs" }
+      ]
+    }
+  ]
+}

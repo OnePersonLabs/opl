@@ -1,0 +1,7 @@
+interface:
+  display_name: "Adversarial Review"
+  short_description: "Review changes for stale references, drift, coherence failures, anti-patterns, etc."
+  default_prompt: "Use $adversarial-review to inspect changes."
+
+policy:
+  allow_implicit_invocation: true

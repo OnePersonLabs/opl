@@ -1,0 +1,7 @@
+interface:
+  display_name: "Configure Harness"
+  short_description: "Inventory and tune a Codex harness"
+  default_prompt: "Use $configure-harness to inventory my Codex setup and help me choose and test its capabilities."
+
+policy:
+  allow_implicit_invocation: true

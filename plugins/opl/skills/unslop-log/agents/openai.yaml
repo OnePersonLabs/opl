@@ -1,0 +1,6 @@
+interface:
+  display_name: "Unslop Log"
+  short_description: "Record an agent quality lapse without analysis"
+  default_prompt: "Use $unslop-log to capture this agent failure as a timestamped log entry."
+policy:
+  allow_implicit_invocation: false

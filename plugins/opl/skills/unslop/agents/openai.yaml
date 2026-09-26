@@ -1,0 +1,7 @@
+interface:
+  display_name: "Unslop"
+  short_description: "Trace one live agent failure to a proven corrective rule"
+  default_prompt: "Use $unslop to analyze one live agent failure and prove the corrective rule by replay."
+
+policy:
+  allow_implicit_invocation: false

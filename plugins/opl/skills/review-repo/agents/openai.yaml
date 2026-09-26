@@ -1,0 +1,6 @@
+interface:
+  display_name: "Review Repo"
+  short_description: "Use when reviewing large or agent-generated changes, unfamiliar repositories, major refactors, or working code that feels unusually complex, inconsistent, nonidiomatic, difficult to navigate, or difficult to explain; especially before integration or when local patterns may have become self-reinforcing."
+
+policy:
+  allow_implicit_invocation: false

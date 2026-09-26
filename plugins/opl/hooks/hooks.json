@@ -1,0 +1,242 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "timeout": 3,
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-dangerous-shell-gate.py\"",
+            "timeout": 20,
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-dangerous-shell-gate.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-model-selection-gate.py\"",
+            "timeout": 20,
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-model-selection-gate.py\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "timeout": 3,
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-marketplace-refresh-hook.py\"",
+            "timeout": 20,
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-marketplace-refresh-hook.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|ApplyPatch|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-skill-review-gate.py\"",
+            "timeout": 20,
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-skill-review-gate.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-artifact-discipline-gate.py\"",
+            "timeout": 20,
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-artifact-discipline-gate.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-skill-reference-sigil-gate.py\"",
+            "timeout": 20,
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-skill-reference-sigil-gate.py\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "timeout": 3,
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook"
+          },
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-response-discipline-gate.py\"",
+            "timeout": 20,
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-response-discipline-gate.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-skill-review-gate.py\"",
+            "timeout": 20,
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-skill-review-gate.py\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-config-check.py\" hook",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-config-check.py\" hook",
+            "timeout": 20,
+            "additionalContextLimit": 8192
+          }
+        ]
+      },
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-agents-context-hook.py\"",
+            "timeout": 20,
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-agents-context-hook.py\"",
+            "additionalContextLimit": 2048
+          }
+        ]
+      },
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-compatibility-check.py\"",
+            "timeout": 45,
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-compatibility-check.py\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-compatibility-check.py\"",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-compatibility-check.py\"",
+            "timeout": 45
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "Interrupt": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}

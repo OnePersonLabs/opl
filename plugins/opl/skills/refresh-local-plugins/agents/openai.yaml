@@ -1,0 +1,6 @@
+interface:
+  display_name: "Refresh Local Plugins"
+  short_description: "Refresh changed plugins in Windows and WSL"
+  default_prompt: "Use $refresh-local-plugins to refresh changed plugins from this checkout in existing user-level Windows and WSL Codex homes."
+policy:
+  allow_implicit_invocation: true

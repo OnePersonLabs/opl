@@ -1,0 +1,7 @@
+interface:
+  display_name: "Test-Driven Development"
+  short_description: "Develop behavior through reliable test-first feedback"
+  default_prompt: "Use $test-driven-development to implement this behavior change with reliable test-first evidence."
+
+policy:
+  allow_implicit_invocation: true

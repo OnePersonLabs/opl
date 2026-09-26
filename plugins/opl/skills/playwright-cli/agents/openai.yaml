@@ -1,0 +1,6 @@
+interface:
+  display_name: "Playwright Cli"
+  short_description: "Use the Playwright Cli workflow"
+
+policy:
+  allow_implicit_invocation: true

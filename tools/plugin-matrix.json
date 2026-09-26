@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "rootUnitRoots": ["tests/unit/plugin-dev"],
+  "evaluation": {
+    "model": "gpt-6-sol",
+    "reasoningEffort": "high"
+  },
+  "plugins": {
+    "opl": {
+      "unitRoots": ["tests/unit/opl"],
+      "commands": [],
+      "mcpMode": "launcher-contract",
+      "uiMode": "none"
+    }
+  }
+}

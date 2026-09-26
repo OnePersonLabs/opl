@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "id": "opl.test-driven-development.alternatives",
+      "whenEnabled": { "kind": "skill", "name": "test-driven-development", "plugin": "opl@opl" },
+      "reason": "These TDD workflows compete for the same implementation tasks and may prescribe different test and brownfield-editing behavior.",
+      "disallowed": [
+        { "kind": "skill", "name": "test-driven-development" },
+        { "kind": "skill", "name": "test-driven-development-curated" }
+      ]
+    }
+  ]
+}

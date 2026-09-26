@@ -1,0 +1,7 @@
+interface:
+  display_name: "Agent Instructions"
+  short_description: "Design and review agent instructions"
+  default_prompt: "Use $agent-instructions to author or review this agent instruction system."
+
+policy:
+  allow_implicit_invocation: true
