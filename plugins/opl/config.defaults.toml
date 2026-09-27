@@ -11,3 +11,7 @@ code_mode = true
 code_mode_prewarm = true
 code_mode_interrupt = true
 default_mode_request_user_input = true
+
+[agents]
+default_subagent_model = "gpt-6-sol"
+default_subagent_reasoning_effort = "medium"

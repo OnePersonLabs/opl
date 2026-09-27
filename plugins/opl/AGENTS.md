@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 11 -->
+<!-- opl-instructions-version: 12 -->
 
 # Core Behavior
 
@@ -223,8 +223,6 @@ the deployed application, and record the outcome.
 
 ## Shell Output Discipline
 
-Before broad `rg`, `find`, `tree`, `ls -R`, or multi-file reads, list files first and narrow targets. Prefer `rg -l` for match discovery.
-
 For structural code questions, prefer available language-aware symbol or AST
 tools over broad text searches. Use text search for prose, literal strings,
 configuration, and file discovery, or when structural tools are unavailable.
@@ -352,6 +350,5 @@ Use `fork_turns="none"` or limited history for a focused assignment when it
 reduces irrelevant context. Use full history only when continuity outweighs its
 cost. Do not reuse an expensive agent merely for convenience. Shared history
 does not isolate files, browser state, processes, or permissions.
-When `timeout_ms: 1500000` by default when calling `wait_agent`.
 
 Use `timeout_ms: 1500000` when calling `wait_agent`.
