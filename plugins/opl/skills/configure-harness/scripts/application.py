@@ -274,6 +274,24 @@ def _discard(rest: dict, section: str, key: str) -> None:
             rest.pop(section, None)
 
 
+def _discard_path(rest: dict, path: tuple[str, ...]) -> None:
+    current = rest
+    parents: list[tuple[dict, str]] = []
+    for key in path[:-1]:
+        value = current.get(key)
+        if not isinstance(value, dict):
+            return
+        parents.append((current, key))
+        current = value
+    current.pop(path[-1], None)
+    for parent, key in reversed(parents):
+        value = parent.get(key)
+        if isinstance(value, dict) and not value:
+            parent.pop(key)
+        else:
+            break
+
+
 def _same_scalar(left, right) -> bool:
     """Return true only when TOML scalar values have the same type and value."""
     return type(left) is type(right) and left == right
@@ -283,13 +301,7 @@ def _validate_policy_section(section: str, old: dict, new: dict, old_rest: dict,
                              defaults: dict) -> None:
     original = _table(old.get(section), section)
     proposed = _table(new.get(section), section)
-    for key, expected in defaults.items():
-        prior = original.get(key)
-        value = proposed.get(key)
-        if not _same_scalar(value, prior) and not _same_scalar(value, expected):
-            raise ValueError(f"{section}.{key} must be {expected!r} when changed")
-        _discard(old_rest, section, key)
-        _discard(new_rest, section, key)
+    _validate_policy_values((section,), original, proposed, old_rest, new_rest, defaults)
 
     if section != "agents":
         return
@@ -315,6 +327,36 @@ def _validate_policy_section(section: str, old: dict, new: dict, old_rest: dict,
         _discard(new_rest, "agents", name)
 
 
+def _validate_policy_values(path: tuple[str, ...], original: dict, proposed: dict,
+                            old_rest: dict, new_rest: dict, defaults: dict) -> None:
+    for key, expected in defaults.items():
+        prior = original.get(key)
+        value = proposed.get(key)
+        item_path = (*path, key)
+        if isinstance(expected, dict):
+            if _same_scalar(value, prior):
+                _discard_path(old_rest, item_path)
+                _discard_path(new_rest, item_path)
+                continue
+            if not isinstance(value, dict):
+                raise ValueError(f"{'.'.join(item_path)} must be a table when changed")
+            _validate_policy_values(
+                item_path,
+                prior if isinstance(prior, dict) else {},
+                value,
+                old_rest,
+                new_rest,
+                expected,
+            )
+            if not isinstance(prior, dict):
+                _discard_path(old_rest, item_path)
+        else:
+            if not _same_scalar(value, prior) and not _same_scalar(value, expected):
+                raise ValueError(f"{'.'.join(item_path)} must be {expected!r} when changed")
+            _discard_path(old_rest, item_path)
+            _discard_path(new_rest, item_path)
+
+
 def _load_config_defaults() -> dict[str, dict]:
     path = Path(__file__).resolve().parents[3] / "config.defaults.toml"
     try:
@@ -326,16 +368,25 @@ def _load_config_defaults() -> dict[str, dict]:
         values = data.get(section, {})
         if not isinstance(values, dict):
             raise ValueError(f"OPL config defaults {section} must be a table")
-        checked = {}
-        for key, value in values.items():
-            if not isinstance(key, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", key):
-                raise ValueError(f"OPL config defaults {section} has an invalid setting name")
-            if isinstance(value, bool) or isinstance(value, (str, int)):
-                checked[key] = value
-            else:
-                raise ValueError(f"OPL config defaults {section}.{key} must be a string, boolean, or integer")
-        result[section] = checked
+        result[section] = _checked_defaults(values, (section,), allow_tables=section == "features")
     return result
+
+
+def _checked_defaults(values: dict, path: tuple[str, ...], *, allow_tables: bool) -> dict:
+    checked = {}
+    for key, value in values.items():
+        if not isinstance(key, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", key):
+            raise ValueError(f"OPL config defaults {'.'.join(path)} has an invalid setting name")
+        item_path = (*path, key)
+        if isinstance(value, dict) and allow_tables:
+            checked[key] = _checked_defaults(value, item_path, allow_tables=True)
+        elif isinstance(value, bool) or isinstance(value, (str, int)):
+            checked[key] = value
+        else:
+            raise ValueError(
+                f"OPL config defaults {'.'.join(item_path)} must be a string, boolean, integer, or feature table"
+            )
+    return checked
 
 
 def _validate(kind: str, before: bytes | None, after: bytes) -> None:

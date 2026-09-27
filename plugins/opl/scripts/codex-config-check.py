@@ -78,15 +78,25 @@ def load_defaults(plugin_root: Path) -> dict[str, dict[str, Any]]:
         values = data.get(section, {})
         if not isinstance(values, dict):
             raise ConfigCheckError(f"OPL configuration defaults {section} must be a table")
-        checked: dict[str, Any] = {}
-        for key, value in values.items():
-            if not isinstance(key, str) or not ROLE_NAME.fullmatch(key):
-                raise ConfigCheckError(f"OPL configuration defaults {section} has an invalid setting name")
-            if not isinstance(value, (str, bool, int)):
-                raise ConfigCheckError(f"OPL configuration defaults {section}.{key} must be a string, boolean, or integer")
-            checked[key] = value
-        result[section] = checked
+        result[section] = _checked_defaults(values, (section,), allow_tables=section == "features")
     return result
+
+
+def _checked_defaults(values: dict[str, Any], path: tuple[str, ...], *, allow_tables: bool) -> dict[str, Any]:
+    checked: dict[str, Any] = {}
+    for key, value in values.items():
+        if not isinstance(key, str) or not ROLE_NAME.fullmatch(key):
+            raise ConfigCheckError(f"OPL configuration defaults {'.'.join(path)} has an invalid setting name")
+        item_path = (*path, key)
+        if isinstance(value, dict) and allow_tables:
+            checked[key] = _checked_defaults(value, item_path, allow_tables=True)
+        elif isinstance(value, (str, bool, int)):
+            checked[key] = value
+        else:
+            raise ConfigCheckError(
+                f"OPL configuration defaults {'.'.join(item_path)} must be a string, boolean, integer, or feature table"
+            )
+    return checked
 
 
 def _top_marker_span(text: str) -> tuple[int, int, str | None] | None:
@@ -235,16 +245,29 @@ def _same_scalar(left: Any, right: Any) -> bool:
     return type(left) is type(right) and left == right
 
 
-def _value_findings(section: str, expected: dict[str, Any], actual: dict[str, Any]) -> list[dict[str, Any]]:
+def _value_findings(section: str, expected: dict[str, Any], actual: dict[str, Any],
+                    path: tuple[str, ...] = ()) -> list[dict[str, Any]]:
     findings = []
     for key, value in expected.items():
         observed = actual.get(key)
-        if observed is None and value is True and key in EFFECTIVE_TRUE_DEFAULTS.get(section, set()):
+        item_path = (*path, key)
+        if isinstance(value, dict):
+            if not isinstance(observed, dict):
+                findings.append({
+                    "code": "setting_mismatch",
+                    "path": ".".join((section, *item_path)),
+                    "expected": value,
+                    "actual": observed,
+                })
+            else:
+                findings.extend(_value_findings(section, value, observed, item_path))
+            continue
+        if not path and observed is None and value is True and key in EFFECTIVE_TRUE_DEFAULTS.get(section, set()):
             continue
         if not _same_scalar(observed, value):
             findings.append({
                 "code": "setting_mismatch",
-                "path": f"{section}.{key}",
+                "path": ".".join((section, *item_path)),
                 "expected": value,
                 "actual": observed,
             })
@@ -381,6 +404,42 @@ def _update_table_values(text: str, path: tuple[str, ...], values: dict[str, Any
     return text[:body_start] + replacement + text[end:]
 
 
+def _remove_table_value(text: str, path: tuple[str, ...], key: str) -> str:
+    blocks = [item for item in table_blocks(text) if item[0] == path]
+    if len(blocks) > 1:
+        raise ConfigCheckError(f"Duplicate TOML table {'.'.join(path)}")
+    if not blocks:
+        return text
+    _current, _start, body_start, end = blocks[0]
+    body = text[body_start:end]
+    pattern = re.compile(rf"(?m)^[ \t]*{re.escape(key)}[ \t]*=[^\r\n]*(?:\r?\n|$)")
+    matches = list(pattern.finditer(body))
+    if len(matches) > 1:
+        raise ConfigCheckError(f"Duplicate {key} assignment in managed TOML table")
+    if not matches:
+        return text
+    match = matches[0]
+    return text[:body_start] + body[:match.start()] + body[match.end():] + text[end:]
+
+
+def _update_default_values(text: str, path: tuple[str, ...], values: dict[str, Any], actual: dict[str, Any]) -> str:
+    scalars = {key: value for key, value in values.items() if not isinstance(value, dict)}
+    text = _update_table_values(text, path, scalars)
+    for key, value in values.items():
+        if not isinstance(value, dict):
+            continue
+        observed = actual.get(key)
+        if observed is not None and not isinstance(observed, dict):
+            text = _remove_table_value(text, path, key)
+        text = _update_default_values(
+            text,
+            (*path, key),
+            value,
+            observed if isinstance(observed, dict) else {},
+        )
+    return text
+
+
 def _remove_table(text: str, path: tuple[str, ...]) -> str:
     blocks = [item for item in table_blocks(text) if item[0] == path]
     if len(blocks) > 1:
@@ -403,7 +462,8 @@ def render_config(original: bytes, config: dict[str, Any], inventory: dict[str, 
     except UnicodeError as error:
         raise ConfigCheckError("config.toml is not valid UTF-8") from error
     if include_policy:
-        text = _update_table_values(text, ("features",), defaults["features"])
+        features = _table(config.get("features"), "features")
+        text = _update_default_values(text, ("features",), defaults["features"], features)
         text = _update_table_values(text, ("agents",), defaults["agents"])
 
     agents = _table(config.get("agents"), "agents")

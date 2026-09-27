@@ -149,6 +149,32 @@ class HarnessApplication(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "agents.max_depth"):
                 application.prepare(self.home, [{"target": str(config), "candidate": str(wrong_integer)}])
 
+    def test_config_checker_policy_allows_managed_nested_feature_defaults_only(self):
+        config = self.home / "config.toml"
+        config.write_bytes(
+            b"[features.current_time_reminder]\nenabled = false\nreminder_interval_seconds = 60\n"
+        )
+        repaired = self.candidate(
+            "nested-feature.toml",
+            b"[features.current_time_reminder]\nenabled = true\nreminder_interval_seconds = 300\n"
+            b'delivery_mode = "any_inference"\n',
+        )
+        with patch.object(application, "_load_config_defaults", return_value={
+            "features": {"current_time_reminder": {
+                "enabled": True,
+                "reminder_interval_seconds": 300,
+                "delivery_mode": "any_inference",
+            }},
+            "agents": {},
+        }):
+            application.prepare(self.home, [{"target": str(config), "candidate": str(repaired)}])
+            wrong = self.candidate(
+                "wrong-nested-feature.toml",
+                repaired.read_bytes().replace(b"reminder_interval_seconds = 300", b"reminder_interval_seconds = 301"),
+            )
+            with self.assertRaisesRegex(ValueError, "features.current_time_reminder.reminder_interval_seconds"):
+                application.prepare(self.home, [{"target": str(config), "candidate": str(wrong)}])
+
     def test_config_checker_ignore_marker_is_a_versioned_top_insertion_or_removal_even_when_toml_is_invalid(self):
         config = self.home / "config.toml"
         config.write_bytes(b"[broken")

@@ -117,10 +117,26 @@ class ConfigCheckTests(unittest.TestCase):
         self.assertEqual({key: result["agents"][key] for key in defaults["agents"]}, defaults["agents"])
         self.assertIn("opl-role", result["agents"])
 
-    def test_shipped_defaults_apply_sol_medium_without_managing_features(self):
+    def test_shipped_defaults_apply_nested_features_and_sol_medium(self):
         plugin = ROOT / "plugins" / "opl"
         expected = {
-            "features": {},
+            "features": {
+                "current_time_reminder": {
+                    "enabled": True,
+                    "reminder_interval_seconds": 300,
+                    "delivery_mode": "any_inference",
+                },
+                "multi_agent_v2": {
+                    "min_wait_timeout_ms": 10000,
+                    "default_wait_timeout_ms": 1500000,
+                    "max_wait_timeout_ms": 1500000,
+                },
+                "apply_patch_preserve_line_endings": True,
+                "code_mode": True,
+                "code_mode_prewarm": True,
+                "code_mode_interrupt": True,
+                "default_mode_request_user_input": True,
+            },
             "agents": {
                 "default_subagent_model": "gpt-6-sol",
                 "default_subagent_reasoning_effort": "medium",
@@ -135,18 +151,23 @@ class ConfigCheckTests(unittest.TestCase):
         self.assertEqual(application._load_config_defaults(), expected)
         self.config.write_text(
             'sandbox_mode = "workspace-write"\n'
-            '[features]\nmulti_agent = false\nhooks = false\n'
+            '[features]\nmulti_agent = false\nhooks = false\ncode_mode = false\n'
+            '[features.current_time_reminder]\nenabled = false\nreminder_interval_seconds = 60\n'
             '[agents]\ndefault_subagent_model = "gpt-6-luna"\n'
             'default_subagent_reasoning_effort = "high"\n',
             encoding="utf-8",
         )
         report, status = checker.command_check(self.home, plugin)
         self.assertEqual(status, 1)
-        self.assertFalse(any(item["path"].startswith("features.") for item in report["findings"]))
+        self.assertIn("features.current_time_reminder.enabled", {item["path"] for item in report["findings"]})
+        self.assertIn("features.multi_agent_v2", {item["path"] for item in report["findings"]})
         _, status = checker.command_fix(self.home, plugin)
         self.assertEqual(status, 0)
         result = self.parsed()
-        self.assertEqual(result["features"], {"multi_agent": False, "hooks": False})
+        for key, value in expected["features"].items():
+            self.assertEqual(result["features"][key], value)
+        self.assertFalse(result["features"]["multi_agent"])
+        self.assertFalse(result["features"]["hooks"])
         self.assertEqual(result["sandbox_mode"], "workspace-write")
         for key, value in expected["agents"].items():
             self.assertEqual(result["agents"][key], value)
