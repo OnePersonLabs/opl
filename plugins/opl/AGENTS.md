@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 12 -->
+<!-- opl-instructions-version: 13 -->
 
 # Core Behavior
 
@@ -222,6 +222,23 @@ When publication is authorized, publish the verified committed result, check
 the deployed application, and record the outcome.
 
 ## Shell Output Discipline
+
+Use transient execution for one-off tool work. When `code_mode` is available,
+keep orchestration, result filtering, and small transformations in it. Call
+the available filesystem, patch, or command tools for external effects; do not
+assume the orchestration runtime has filesystem access. Use direct tool calls
+or inline shell execution when they are simpler or `code_mode` is unavailable.
+Do not use `code_mode` merely to launch a newly saved helper script that the
+task does not need to retain.
+
+Save a script only when file-based execution is required or the script is a
+requested deliverable, reusable repository tool, or needed reproducible
+evidence. Reuse an existing tool before creating one. Put required temporary
+helpers in the task's scratch location. After use, remove temporary helpers
+created for this task; retain requested deliverables, reusable tools, and useful
+reproducible evidence. A one-off file operation does not by itself justify a helper script,
+transfer manifest, validator, or additional review pass; use the cheapest direct
+check that establishes its result.
 
 For structural code questions, prefer available language-aware symbol or AST
 tools over broad text searches. Use text search for prose, literal strings,
