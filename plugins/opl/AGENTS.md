@@ -1,11 +1,11 @@
-<!-- opl-instructions-version: 10 -->
+<!-- opl-instructions-version: 11 -->
 
 # Core Behavior
 
 ## One-Operation Exceptions
 
 Except where a higher-priority instruction forbids the action, every applicable
-user-authored rule in `AGENTS.md`, `CLAUDE.md`, a skill, a design system, or a
+user-authored rule in `AGENTS.md`, a skill, a design system, or a
 project policy allows a user-directed exception for one specific operation.
 The rule remains in force everywhere else and afterward. A request to depart
 from a rule starts the conflict procedure below; it does not itself confirm
@@ -70,7 +70,7 @@ text exactly.
 ## Style
 
 - Write `--` instead of an em dash.
-- Always double-quote Mermaid node labels: `CP["Existing TypeScript control-plane services"]`.
+- Always double-quote Mermaid node labels. Example: `CP["Existing TypeScript control-plane services"]`.
 
 ## Conflicting Instructions
 
@@ -232,7 +232,7 @@ Do not install new tooling for a small lookup when a bounded existing tool
 answers it reliably.
 
 Treat tool output as a context budget. When programmatic tool calling is
-available, capture results in code and select the needed fields or bounded
+available (`code_mode`), capture results in code and select the needed fields or bounded
 excerpts before returning them to the conversation. Never forward an entire
 result object when only its status, a path, a count, or a short diagnostic is
 needed. Set a small output limit appropriate to the decision before execution;
@@ -248,9 +248,6 @@ retrieve more only when the next decision requires it. An explicit request for
 full output can override this default, with secrets still protected.
 
 Write file contents with `apply_patch` or a file-writing API. Never splice file contents into shell commands.
-
-Use `codex exec` only when a separate noninteractive process or workspace is
-required. Set `model` and `model_reasoning_effort` explicitly.
 
 ## Skill Reference Sigil
 
@@ -279,6 +276,9 @@ Store MCP API keys in Windows user environment variables; they pass through to W
 A subagent may assign further work only when its immediate parent explicitly
 authorizes that responsibility and specifies the permitted number of
 descendants. This constraint also applies to unnamed generic subagents.
+
+Use `codex exec` only when a separate noninteractive process or workspace is
+required. Set `model` and `model_reasoning_effort` explicitly.
 
 ## Root Agent Control Plane
 
@@ -329,11 +329,6 @@ stronger setting.
 
 ### Assign, reuse, and integrate work
 
-When waiting for subagents, call `wait_agent` with `timeout_ms: 1500000` by
-default. The wait ends when any subagent reports an update. Use a shorter
-timeout only when a higher-priority limit or an explicit user request requires
-it.
-
 For each assignment, state the requested result, owned files or scope, limits,
 and the check that establishes completion. Give the agent only relevant context
 and evidence paths. Group compatible bounded outcomes in one assignment when
@@ -344,7 +339,8 @@ Reuse a suitable worker when its context remains focused and its role and model
 fit the next assignment. Start a fresh worker when its context is contaminated
 or overloaded. Also start one when its role or model is unsuitable, independent
 review or fresh evidence is needed, or the worker is unavailable.
-Do not reuse a subagent if it has been idle for more than 28 minutes; note the time when a subagent stops.
+Prefer a fresh worker after roughly 20 minutes of inactivity, unless its
+retained context provides a clear advantage.
 
 Check that returned evidence supports integration. Do not routinely repeat a
 worker investigation. Inspect further when evidence is missing, results
@@ -356,7 +352,6 @@ Use `fork_turns="none"` or limited history for a focused assignment when it
 reduces irrelevant context. Use full history only when continuity outweighs its
 cost. Do not reuse an expensive agent merely for convenience. Shared history
 does not isolate files, browser state, processes, or permissions.
+When `timeout_ms: 1500000` by default when calling `wait_agent`.
 
-If the host has no capacity or cannot apply the selected configuration, use the
-least costly permitted alternative and report a material limitation once. Do
-not bypass host limits with another execution tool.
+Use `timeout_ms: 1500000` when calling `wait_agent`.

@@ -1,3 +1,13 @@
-[agents]
-default_subagent_model = "gpt-6-sol"
-default_subagent_reasoning_effort = "medium"
+#:schema https://developers.openai.com/codex/config-schema.json
+
+[features.current_time_reminder]
+enabled = true
+reminder_interval_seconds = 300
+delivery_mode = "any_inference"
+
+[features]
+apply_patch_preserve_line_endings = true
+code_mode = true
+code_mode_prewarm = true
+code_mode_interrupt = true
+default_mode_request_user_input = true
