@@ -5,6 +5,11 @@ enabled = true
 reminder_interval_seconds = 300
 delivery_mode = "any_inference"
 
+[features.multi_agent_v2]
+min_wait_timeout_ms = 10000
+default_wait_timeout_ms = 1500000
+max_wait_timeout_ms = 1500000
+
 [features]
 apply_patch_preserve_line_endings = true
 code_mode = true
