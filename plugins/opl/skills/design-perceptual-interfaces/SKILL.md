@@ -1,0 +1,37 @@
+---
+name: design-perceptual-interfaces
+description: Design or critique interfaces for rapid, accurate comprehension and action using human factors, cognitive ergonomics, ecological interface design, information visualization, and interaction design. Use for instruments, controls, dashboards, monitoring, navigation, decision support, alerts, simulations, and other products where people must understand relationships, evidence, uncertainty, and next actions with limited attention. Produce design foundations, perceptual and interaction grammar, information hierarchy, stateful component contracts, rendering profiles, and a validation plan before styling or implementation tokens.
+---
+
+# Design Perceptual Interfaces
+
+Treat the interface as an external cognitive system. Make the consequential relationship, next justified action, and strength of evidence perceptible with as little recall, arithmetic, comparison, and inference as possible. Preserve necessary complexity in the system; expose its useful consequences at the right depth of attention.
+
+## Method
+
+1. **Model the work.** Identify the user, goal, environment, viewing distance, glance duration, display and input constraints, competing tasks, consequences of mistakes, and actual decisions. Separate what the system observes, what the user intends, what it infers, and what it recommends. Ask for missing constraints only when they determine a consequential design choice; otherwise state assumptions and proceed.
+2. **Build an interpretation inventory.** For each consequential situation, write: what is true; what is known; what remains uncertain; what the person should understand, do, or refrain from doing; and what misreading would matter. Include favorable, waiting, uncertain, stale, unavailable, conflicting, transitional, and fault states. Distinguish uncertainty about *where* an answer lies from a genuinely *wide acceptable range*.
+3. **Write design foundations.** State the mental work to remove, the relationships to expose, the stable frame of reference, how quiet success reads, the attention depths (glance, inspect, study), and the decisions that require precise values. Keep foundational claims separate from candidate glyphs and layouts.
+4. **Define a perceptual grammar.** Assign consistent jobs to position, orientation, distance, containment, extent, shape, line pattern, weight, luminance/color, text, and motion. Declare coordinate frames, baselines, scales, and units. Preserve physical or mathematical truth: never displace a bearing, change a baseline, or animate through unsupported values simply to make a graphic attractive. Select a small number of redundant cues for distinctions with high error cost. See [perceptual-grammar.md](references/perceptual-grammar.md).
+5. **Set information hierarchy and component contracts.** Establish what registers at a glance, what supports interpretation on inspection, and what belongs in detailed study. For each component specify its referent, visual encoding, source, validity conditions, states, transitions, interaction, persistence, and relationship to adjacent components. Make observations, user goals, estimates, and advice distinguishable. Show an optimum or useful region when reached; remove only the obsolete instruction. Never make missing data appear as zero, neutral, or success.
+6. **Define interaction and time.** Describe the loop from user action to system observation, evaluation, feedback, and next action. Separate exploratory suggestions from supported directives and waiting to measure from holding because operation is already good. Prevent noisy oscillation without leaving an invalid instruction on screen. Every frozen frame should communicate the essential current state; motion may draw attention, never carry indispensable meaning.
+7. **Derive appearance and implementation values.** Choose actual layout, typography, contrast, shape, color, stroke, spacing, and timing from the viewing conditions and semantic contracts. Produce tokens only after a candidate succeeds at realistic size. Define rendering profiles for relevant media and lighting while retaining the same meanings. Color must reinforce meaning available through another cue.
+8. **Test interpretation before preference.** Ask people who did not design the interface what they think is happening, what they would do, and how certain they are. Test short exposure at target apparent size, frozen frames, no-color variants, transitions, adverse states, and real hardware/environment where applicable. Count consequential misreadings, time to appropriate action, repeat glances, needless corrections, and inappropriate action when advice is unjustified. Revise the semantics and encoding, not merely the styling. See [validation.md](references/validation.md).
+
+## Expert judgment
+
+- Design for *glanceable comprehension*, not the mere presence of a preattentive color or shape. An unfamiliar glyph still has to be learned; a short label can be more economical.
+- Use spatial proximity, alignment, separation, containment, and meaningful change to show relationships directly. Do not require the user to reconstruct them from isolated values or unexplained icons.
+- Keep reference frames stable unless changing them is part of the task. Different variables can occupy one graphic only if their roles and comparison rules remain unambiguous.
+- Keep evidence strength separate from the size or value of what is estimated. An uncertain target and a broad, well-supported good region imply different action.
+- Treat calm as an explicit, meaningful state. Distinguish success, measurement in progress, lack of evidence, and unavailable guidance.
+- Use intensity in proportion to consequence and urgency. A minor performance change should not look like a critical failure; a critical failure must not hide behind a tiny icon next to confident advice.
+- Preserve user agency: show whether advice is exploratory, supported, or withheld; expose supporting detail on demand without making the primary action depend on reading it.
+- Treat accessibility and environmental legibility as design inputs, including low vision, color-vision variation, reduced motion, glare, darkness, interruptions, and assistive technology where relevant. Generic contrast thresholds are baseline checks, not proof of legibility in the use setting.
+- Do not invent measured thresholds, universal reaction times, normative standards, or validated comprehension. Name design targets and hypotheses as such; verify external standards when their current wording matters.
+
+## Deliverable
+
+For a design request, return a usable specification with: decision context and assumptions; foundations; a channel-to-meaning grammar; primary hierarchy; a state matrix; component contracts; interaction and motion rules; rendering profiles; proposed tokens if the context supports them; and a small set of discriminating interpretation tests. Mark design proposals versus established requirements. For a critique, identify the mental operation or consequential misinterpretation each issue creates, propose a specific correction, and prioritize by error cost and attention burden. For implementation work, carry the semantic contracts into code and verify representative states.
+
+Avoid forcing a fixed visual style, a specific domain's metaphor, a standard dashboard layout, or maximal simplicity. Adapt the depth of the deliverable to the user's task; keep the expertise even when the answer is brief.
