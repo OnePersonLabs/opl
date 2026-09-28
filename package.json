@@ -1,11 +1,13 @@
 {
   "name": "opl",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "license": "MIT",
   "repository": "https://github.com/OnePersonLabs/opl",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "prepare": "husky",
     "codex-watch": "node tools/codex-watch.mjs",
@@ -20,5 +22,7 @@
     "release:verify": "node tools/plugin-dev.mjs release",
     "install:local": "node tools/plugin-dev.mjs install-local"
   },
-  "devDependencies": { "husky": "9.1.7" }
+  "devDependencies": {
+    "husky": "9.1.7"
+  }
 }
