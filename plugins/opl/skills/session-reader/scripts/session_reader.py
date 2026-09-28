@@ -404,6 +404,94 @@ def parse_rollout(
     )
 
 
+def claude_session_id(path: Path) -> str:
+    """Identify one explicitly selected Claude JSONL file from its payload."""
+    with path.open("rb") as handle:
+        for _ in range(128):
+            raw = handle.readline()
+            if not raw:
+                break
+            try:
+                item = json.loads(raw)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue
+            if isinstance(item, dict) and isinstance(item.get("sessionId"), str):
+                return item["sessionId"].lower()
+    candidate = session_id_from_path(path)
+    if candidate:
+        return candidate
+    raise ReaderError(f"Claude session file has no sessionId or UUID filename: {path}")
+
+
+def parse_claude_rollout(source: SourceFile) -> ParseResult:
+    """Index user-visible Claude text blocks, excluding tool and thinking payloads."""
+    messages: list[ParsedMessage] = []
+    malformed = unknown = line_no = 0
+    complete_offset = 0
+    created_at = updated_at = cwd = ""
+    with source.path.open("rb") as handle:
+        while True:
+            offset = handle.tell()
+            raw = handle.readline()
+            if not raw:
+                break
+            if not raw.endswith(b"\n"):
+                handle.seek(offset)
+                break
+            line_no += 1
+            complete_offset = handle.tell()
+            try:
+                item = json.loads(raw)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                malformed += 1
+                continue
+            if not isinstance(item, dict):
+                unknown += 1
+                continue
+            if isinstance(item.get("cwd"), str):
+                cwd = item["cwd"]
+            timestamp = item.get("timestamp")
+            if not isinstance(timestamp, str):
+                if item.get("type") in {"user", "assistant"}:
+                    raise ReaderError(f"Claude message lacks timestamp: {source.path}:{line_no}")
+                continue
+            created_at = created_at or timestamp
+            updated_at = timestamp
+            role = item.get("type")
+            if role not in {"user", "assistant"}:
+                continue
+            message = item.get("message")
+            if not isinstance(message, dict):
+                continue
+            content = message.get("content")
+            if isinstance(content, str):
+                text = content
+            elif isinstance(content, list):
+                text = "\n".join(block["text"] for block in content
+                                 if isinstance(block, dict) and block.get("type") == "text"
+                                 and isinstance(block.get("text"), str))
+            else:
+                text = ""
+            if text.strip():
+                messages.append(ParsedMessage(line_no, offset, timestamp, role,
+                                              "user" if role == "user" else "final_answer",
+                                              "claude_message", text))
+    return ParseResult(source.session_id, created_at, updated_at, cwd, "claude_message",
+                       messages, [], line_no, malformed, unknown, complete_offset)
+
+
+def index_claude_file(conn: sqlite3.Connection, path: Path) -> tuple[str, int]:
+    """Index one selected Claude session in the existing SQLite/FTS cache."""
+    resolved = path.expanduser().resolve()
+    if not resolved.is_file() or resolved.suffix.lower() != ".jsonl":
+        raise ReaderError(f"Expected an existing Claude JSONL file: {resolved}")
+    stat = resolved.stat()
+    source = SourceFile(claude_session_id(resolved), resolved, False, stat.st_size, stat.st_mtime_ns)
+    result = full_index(conn, source, parser=parse_claude_rollout)
+    conn.commit()
+    return result
+
+
 def insert_messages(
     conn: sqlite3.Connection,
     session_id: str,
@@ -434,8 +522,78 @@ def insert_messages(
     )
 
 
-def full_index(conn: sqlite3.Connection, source: SourceFile) -> tuple[str, int]:
-    parsed = parse_rollout(source)
+def iter_canonical_events(conn: sqlite3.Connection, *, page_size: int = 256):
+    """Yield durable, ordered prose identities without loading the index into memory.
+
+    An occurrence disambiguates identical content within a session. The identity
+    survives reindexing and archive moves as long as the canonical conversation
+    remains the same. It deliberately excludes physical offsets, which are
+    navigation anchors rather than identity.
+    """
+    if page_size < 1:
+        raise ReaderError("page_size must be positive")
+    cursor = conn.execute(
+        """SELECT m.*, s.path FROM messages m JOIN sessions s USING(session_id)
+           ORDER BY m.session_id, m.message_no"""
+    )
+    occurrences: dict[str, int] = {}
+    current_session = None
+    while rows := cursor.fetchmany(page_size):
+        for row in rows:
+            if row["session_id"] != current_session:
+                current_session = row["session_id"]
+                occurrences.clear()
+            fingerprint = hashlib.sha256(
+                json.dumps(
+                    [row["role"], row["phase"], row["text"]],
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+            ).hexdigest()
+            occurrence = occurrences.get(fingerprint, 0) + 1
+            occurrences[fingerprint] = occurrence
+            event_id = hashlib.sha256(
+                f"{row['session_id']}:{fingerprint}:{occurrence}".encode("ascii")
+            ).hexdigest()
+            yield {
+                "event_id": event_id,
+                "content_fingerprint": fingerprint,
+                "occurrence": occurrence,
+                "session_id": row["session_id"],
+                "message_no": row["message_no"],
+                "path": row["path"],
+                "raw_line": row["raw_line"],
+                "byte_offset": row["byte_offset"],
+                "timestamp": row["timestamp"],
+                "role": row["role"],
+                "phase": row["phase"],
+                "source": row["source"],
+                "text": row["text"],
+            }
+
+
+def next_user_message(conn: sqlite3.Connection, session_id: str, message_no: int):
+    """Return the first later user message and its physical source anchor."""
+    row = conn.execute(
+        """SELECT m.*, s.path FROM messages m JOIN sessions s USING(session_id)
+           WHERE m.session_id=? AND m.message_no>? AND m.role='user'
+           ORDER BY m.message_no LIMIT 1""",
+        (session_id, message_no),
+    ).fetchone()
+    return row_to_message(row) if row is not None else None
+
+
+def full_index(conn: sqlite3.Connection, source: SourceFile, *, parser=None) -> tuple[str, int]:
+    for attempt in range(1, 4):
+        parsed = (parser or parse_rollout)(source)
+        current_stat = source.path.stat()
+        if parsed.complete_offset <= current_stat.st_size:
+            break
+        eprint(json.dumps({"warning": "source_shrank_while_indexing", "path": str(source.path),
+                           "attempt": attempt, "indexed_offset": parsed.complete_offset,
+                           "current_size": current_stat.st_size}))
+    else:
+        raise ReaderError(f"Source changed during three indexing attempts: {source.path}")
     if parsed.session_id != source.session_id:
         raise ReaderError(
             f"Session id mismatch in {source.path}: filename={source.session_id} payload={parsed.session_id}"
@@ -462,8 +620,8 @@ def full_index(conn: sqlite3.Connection, source: SourceFile) -> tuple[str, int]:
             parsed.created_at,
             parsed.updated_at,
             parsed.cwd,
-            source.size,
-            source.mtime_ns,
+            current_stat.st_size,
+            current_stat.st_mtime_ns,
             prefix_len,
             prefix_hash,
             parsed.complete_offset,
@@ -529,6 +687,12 @@ def refresh_index(
                 start_line=old["line_count"],
                 canonical_only=True,
             )
+            current_stat = source.path.stat()
+            if parsed.complete_offset > current_stat.st_size:
+                full_index(conn, source)
+                stats["reindexed"] += 1
+                conn.commit()
+                continue
             insert_messages(conn, session_id, parsed.messages, old["message_count"] + 1)
             conn.execute(
                 """
@@ -543,8 +707,8 @@ def refresh_index(
                     int(source.archived),
                     parsed.updated_at,
                     parsed.cwd,
-                    source.size,
-                    source.mtime_ns,
+                    current_stat.st_size,
+                    current_stat.st_mtime_ns,
                     parsed.complete_offset,
                     parsed.line_count,
                     old["message_count"] + len(parsed.messages),
@@ -554,16 +718,6 @@ def refresh_index(
                 ),
             )
             stats["appended"] += 1
-            conn.commit()
-            continue
-
-        # A pure metadata/path change can preserve indexed messages.
-        if source.size == old["size"] and prefix_matches:
-            conn.execute(
-                "UPDATE sessions SET path=?, archived=?, mtime_ns=? WHERE session_id=?",
-                (str(source.path), int(source.archived), source.mtime_ns, session_id),
-            )
-            stats["unchanged"] += 1
             conn.commit()
             continue
 

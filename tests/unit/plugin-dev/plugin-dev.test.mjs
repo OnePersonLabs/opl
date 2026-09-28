@@ -22,6 +22,7 @@ import { join } from 'node:path'
 import readline from 'node:readline'
 const args = process.argv.slice(2)
 appendFileSync(process.env.FAKE_CODEX_LOG, JSON.stringify(args) + '\\n')
+if (process.env.FAKE_EXPECT_CODEX_HOME && process.env.CODEX_HOME !== process.env.FAKE_EXPECT_CODEX_HOME) process.exit(92)
 if (args[0] === 'exec') {
   process.stdout.write(JSON.stringify({ type: 'item.completed', item: { type: 'agent_message', text: process.env.FAKE_AGENT_MESSAGE || 'Using $adhd.' } }) + '\\n')
 } else if (args[0] === 'app-server') {
@@ -237,12 +238,14 @@ test('eval prepares readable skill links and launches a JS Codex fixture', () =>
     const result = spawnSync(process.execPath, [driver, 'eval', '--plugin', 'opl', '--skill', 'adhd', '--case', 'adhd:direct'], {
       cwd: repositoryRoot,
       encoding: 'utf8',
-      env: { ...process.env, CODEX_BIN: fakeCodex, FAKE_CODEX_LOG: log, OPL_PLUGIN_DEV_STATE: join(root, 'state') },
+      env: { ...process.env, CODEX_BIN: fakeCodex, FAKE_CODEX_LOG: log, OPL_PLUGIN_DEV_STATE: join(root, 'state'),
+        CODEX_HOME: join(root, 'authenticated-home'), FAKE_EXPECT_CODEX_HOME: join(root, 'authenticated-home') },
     })
     assert.equal(result.status, 0, result.stderr)
     assert.match(result.stdout, /PASS adhd:direct/u)
     const args = commands(log)[0]
     assert.equal(args[args.indexOf('--sandbox') + 1], 'read-only')
+    assert.ok(args.includes('--ignore-user-config'), 'eval must isolate user config while retaining its authenticated home')
     if (process.platform === 'win32') {
       const overrides = args.flatMap((argument, index) => argument === '-c' ? [args[index + 1]] : [])
       assert.ok(overrides.includes('windows.sandbox="unelevated"'), 'Windows read-only evaluations must avoid administrator sandbox setup')

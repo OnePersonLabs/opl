@@ -118,6 +118,45 @@ class SessionReaderTests(unittest.TestCase):
         row = self.conn.execute("SELECT * FROM messages WHERE role='assistant'").fetchone()
         self.assertEqual(row["phase"], "final_answer")
 
+    def test_audit_events_have_stable_occurrences_and_next_user_anchor(self) -> None:
+        path = self.path_for()
+        self.write_records(path, [
+            meta(ID_ONE, "2026-07-20T00:00:00Z"),
+            user("2026-07-20T00:00:01Z", "ask"),
+            agent("2026-07-20T00:00:02Z", "repeat"),
+            agent("2026-07-20T00:00:03Z", "repeat"),
+            user("2026-07-20T00:00:04Z", "steer"),
+        ])
+        self.refresh()
+        events = list(reader.iter_canonical_events(self.conn, page_size=1))
+        self.assertEqual(len({event["event_id"] for event in events}), 4)
+        self.assertEqual(events[1]["content_fingerprint"], events[2]["content_fingerprint"])
+        self.assertEqual([events[1]["occurrence"], events[2]["occurrence"]], [1, 2])
+        self.assertEqual(events[1]["path"], str(path.resolve()))
+        self.assertEqual(reader.next_user_message(self.conn, ID_ONE, 2)["text"], "steer")
+        stable = [event["event_id"] for event in events]
+        self.refresh()
+        self.assertEqual(stable, [event["event_id"] for event in reader.iter_canonical_events(self.conn)])
+
+    def test_explicit_claude_file_indexes_visible_text_without_tools(self) -> None:
+        path = self.root / "claude" / f"{ID_ONE}.jsonl"
+        path.parent.mkdir()
+        self.write_records(path, [
+            {"type": "user", "sessionId": ID_ONE, "timestamp": "2026-07-20T00:00:01Z",
+             "message": {"content": "Please fix it"}},
+            {"type": "assistant", "sessionId": ID_ONE, "timestamp": "2026-07-20T00:00:02Z",
+             "message": {"content": [{"type": "thinking", "text": "private"},
+                                     {"type": "text", "text": "Done"},
+                                     {"type": "tool_use", "text": "tool payload"}]}},
+            {"type": "user", "sessionId": ID_ONE, "timestamp": "2026-07-20T00:00:03Z",
+             "message": {"content": [{"type": "tool_result", "text": "hidden"}]}},
+        ])
+        reader.index_claude_file(self.conn, path)
+        events = list(reader.iter_canonical_events(self.conn))
+        self.assertEqual([event["text"] for event in events], ["Please fix it", "Done"])
+        self.assertEqual([event["raw_line"] for event in events], [1, 2])
+        self.assertEqual(events[1]["source"], "claude_message")
+
     def test_session_meta_identity_overrides_filename_identity(self) -> None:
         path = self.path_for(ID_TWO)
         self.write_records(
@@ -220,6 +259,34 @@ class SessionReaderTests(unittest.TestCase):
             self.conn.execute("SELECT COUNT(*) FROM messages_fts WHERE messages_fts MATCH 'replacement'").fetchone()[0],
             1,
         )
+
+    def test_equal_size_tail_rewrite_reindexes_after_same_prefix(self) -> None:
+        path = self.path_for()
+        self.write_records(path, [meta(ID_ONE, "2026-07-20T00:00:00Z"),
+                                  user("2026-07-20T00:00:01Z", "a" * 5000),
+                                  agent("2026-07-20T00:00:02Z", "old tail")])
+        self.refresh()
+        original_size = path.stat().st_size
+        self.write_records(path, [meta(ID_ONE, "2026-07-20T00:00:00Z"),
+                                  user("2026-07-20T00:00:01Z", "a" * 5000),
+                                  agent("2026-07-20T00:00:02Z", "new tail")])
+        self.assertEqual(path.stat().st_size, original_size)
+        self.assertEqual(self.refresh()["reindexed"], 1)
+        self.assertEqual(self.conn.execute("SELECT text FROM messages WHERE role='assistant'").fetchone()[0], "new tail")
+
+    def test_index_uses_post_parse_size_when_source_grows_after_discovery(self) -> None:
+        path = self.path_for()
+        self.write_records(path, [meta(ID_ONE, "2026-07-20T00:00:00Z"),
+                                  user("2026-07-20T00:00:01Z", "ask")])
+        stat_before = path.stat()
+        source = reader.SourceFile(ID_ONE, path.resolve(), False,
+                                   stat_before.st_size, stat_before.st_mtime_ns)
+        with path.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(agent("2026-07-20T00:00:02Z", "answer")) + "\n")
+        reader.full_index(self.conn, source)
+        row = self.conn.execute("SELECT size,indexed_offset FROM sessions").fetchone()
+        self.assertEqual(row["size"], path.stat().st_size)
+        self.assertEqual(row["indexed_offset"], path.stat().st_size)
 
     def test_conversation_view_preserves_global_message_numbers(self) -> None:
         path = self.path_for()

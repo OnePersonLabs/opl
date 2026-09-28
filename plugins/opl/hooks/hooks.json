@@ -5,6 +5,16 @@
         "hooks": [
           {
             "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/skills/slop-buster/scripts/slop_hook.py\"",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/skills/slop-buster/scripts/slop_hook.py\"",
+            "timeout": 3
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
             "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
             "timeout": 3,
             "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook"
@@ -80,6 +90,16 @@
         "hooks": [
           {
             "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/skills/slop-buster/scripts/slop_hook.py\"",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/skills/slop-buster/scripts/slop_hook.py\"",
+            "timeout": 3
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
             "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook",
             "timeout": 3,
             "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-task-watch.py\" hook"
@@ -137,6 +157,16 @@
       }
     ],
     "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/skills/slop-buster/scripts/slop_hook.py\"",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/skills/slop-buster/scripts/slop_hook.py\"",
+            "timeout": 3
+          }
+        ]
+      },
       {
         "hooks": [
           {

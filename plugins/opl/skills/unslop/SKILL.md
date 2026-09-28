@@ -8,7 +8,7 @@ description: >
 
 Trace one AI agent failure to its true causal depth, develop a corrective rule, and **prove the rule works by replaying the failure under it** -- all inline, in this session.
 
-The replay is what separates this skill from `/unslop-session-audit`: an audit reasons its way to a fix; this skill _runs_ the fix against the actual failure and measures whether the agent still slops. If you only want the analysis without empirically testing the rule, or you're auditing a whole session at once, use `/unslop-session-audit` instead.
+The replay is what separates this skill from `$opl:slop-buster audit`: an audit reasons its way to a fix; this skill _runs_ the fix against the actual failure and measures whether the agent still slops. If you only want the analysis without empirically testing the rule, or you're auditing a whole session at once, use `$opl:slop-buster audit` instead.
 
 Most postmortems stop too shallow. "The agent explored too much" is a symptom. "The agent followed a template without assessing complexity" is a proximate antipattern. "The instruction said 'orient before you act' with no scope boundary, so the agent interpreted it as license to explore the entire filesystem" is the **instruction vulnerability** -- the actual bug. This skill climbs the full causal depth ladder.
 
@@ -247,7 +247,7 @@ Often the best fix is a **depth 2 rewrite** -- don't add a new rule when you can
    relevant skills, hooks, plugins, and permissions; print/exec mode is not a
    substitute for that interactive environment.
 
-If any precondition fails, **do not fake it**: skip Steps 6b-6e, develop the rule by reasoning instead (the `/unslop-session-audit` methodology), and tell the user the rule is **reasoned, not replay-tested** -- never present an untested rule as validated. Either way the analysis from Steps 1-5 still stands.
+If any precondition fails, **do not fake it**: skip Steps 6b-6e, develop the rule by reasoning instead (the `$opl:slop-buster audit` methodology), and tell the user the rule is **reasoned, not replay-tested** -- never present an untested rule as validated. Either way the analysis from Steps 1-5 still stands.
 
 Find the session that produced the failure. Codex sessions live in `~/.codex/sessions/YYYY/MM/DD/`; Claude Code sessions live in `~/.claude/projects/`. Use timestamp correlation with the slop entry to find the right JSONL file.
 

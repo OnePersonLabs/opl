@@ -1,7 +1,7 @@
 interface:
   display_name: "Slop Buster"
-  short_description: "Mine Codex logs for agent slop"
-  default_prompt: "Use $slop-buster to mine Codex session logs for recurring agent slop."
+  short_description: "Audit sessions and maintain adaptive slop detectors"
+  default_prompt: "Use $slop-buster to review new session evidence and update the failure-pattern dossiers."
 
 policy:
   allow_implicit_invocation: false

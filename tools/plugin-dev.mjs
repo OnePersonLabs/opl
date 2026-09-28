@@ -373,8 +373,8 @@ function activationEvidence(text, skill) {
 function runEval(entries = selectedPlugins()) {
   const requestedSkill = option('skill')
   const requestedCase = option('case')
-  const authoringHome = join(stateRoot(), 'authoring')
-  mkdirSync(authoringHome, { recursive: true })
+  const evaluationModel = option('model') ?? matrix.evaluation.model
+  const evaluationEffort = option('reasoning-effort') ?? matrix.evaluation.reasoningEffort
   const resultRoot = resolve(repoRoot, '.work', 'eval-results')
   mkdirSync(resultRoot, { recursive: true })
   for (const entry of entries) {
@@ -397,13 +397,13 @@ function runEval(entries = selectedPlugins()) {
         'read-only',
         ...(process.platform === 'win32' ? ['-c', 'windows.sandbox="unelevated"'] : []),
         '-m',
-        matrix.evaluation.model,
+        evaluationModel,
         '-c',
-        `model_reasoning_effort=\"${matrix.evaluation.reasoningEffort}\"`,
+        `model_reasoning_effort=\"${evaluationEffort}\"`,
         '-C',
         host,
         item.prompt,
-      ]), { env: { ...process.env, CODEX_HOME: authoringHome }, capture: true })
+      ]), { env: process.env, capture: true })
       const events = output.split(/\r?\n/u).filter(Boolean).map((line) => JSON.parse(line))
       writeFileSync(join(resultRoot, `${entry.name}-${item.id.replace(/[^a-z0-9_-]/giu, '-')}.events.json`), `${JSON.stringify(events, null, 2)}\n`)
       const text = events
@@ -412,7 +412,7 @@ function runEval(entries = selectedPlugins()) {
         .join('\n')
       const activated = activationEvidence(text, item.skill)
       const pass = activated === item.should_activate
-      receipts.push({ ...item, activated, pass, model: matrix.evaluation.model, reasoningEffort: matrix.evaluation.reasoningEffort, response: text })
+      receipts.push({ ...item, activated, pass, model: evaluationModel, reasoningEffort: evaluationEffort, response: text })
       console.log(`${pass ? 'PASS' : 'FAIL'} ${item.id}`)
     }
     const path = join(resultRoot, `${entry.name}.json`)
