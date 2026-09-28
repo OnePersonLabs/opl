@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -39,6 +39,43 @@ test('accepts a staged revision bump with instruction changes', (t) => {
   assert.equal(check(t, { staged: instructions(2, '# Updated\n') }).status, 0)
 })
 
+test('pre-commit syncs agent TOMLs, bumps the revision, and stages the instruction file', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'opl-agent-profile-sync-'))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const git = (...args) => execFileSync('git', args, { cwd: root, stdio: 'pipe' })
+  git('init', '--quiet')
+  git('config', 'user.name', 'Test')
+  git('config', 'user.email', 'test@example.invalid')
+  const agents = join(root, 'plugins', 'opl', 'agents')
+  mkdirSync(agents, { recursive: true })
+  const profile = join(agents, 'opl-example.toml')
+  writeFileSync(profile, 'name = "opl-example"\ndescription = "Example role."\n')
+  const file = join(root, instructionPath)
+  const initial = instructions(1, '### Subagent Profiles\n\nUse a specific subagent when its responsibility fits the assignment:\n\n- "opl-example": "Example role."\n\n### Root Agent Control Plane\n')
+  writeFileSync(file, initial)
+  git('add', instructionPath, 'plugins/opl/agents/opl-example.toml')
+  git('-c', 'core.hooksPath=/dev/null', 'commit', '--quiet', '-m', 'baseline')
+
+  writeFileSync(profile, 'name = "opl-example"\ndescription = "Updated role description."\n')
+  const unstaged = spawnSync(process.execPath, [guard], { cwd: root, encoding: 'utf8' })
+  assert.equal(unstaged.status, 1)
+  assert.match(unstaged.stderr, /Stage all changed files in plugins\/opl\/agents/u)
+  assert.equal(readFileSync(file, 'utf8'), initial, 'unstaged profile edits must not alter or stage AGENTS.md')
+
+  git('add', 'plugins/opl/agents/opl-example.toml')
+  const result = spawnSync(process.execPath, [guard], { cwd: root, encoding: 'utf8' })
+  assert.equal(result.status, 0, result.stderr)
+  assert.match(result.stdout, /Synchronized agent profiles and staged plugins\/opl\/AGENTS\.md/u)
+  const updated = readFileSync(file, 'utf8')
+  assert.match(updated, /^<!-- opl-instructions-version: 2 -->/u)
+  assert.match(updated, /- "opl-example": "Updated role description\."/u)
+  assert.equal(execFileSync('git', ['diff', '--cached', '--name-only', '--', instructionPath], { cwd: root, encoding: 'utf8' }).trim(), instructionPath)
+  const repeated = spawnSync(process.execPath, [guard], { cwd: root, encoding: 'utf8' })
+  assert.equal(repeated.status, 0, repeated.stderr)
+  assert.doesNotMatch(repeated.stdout, /Synchronized agent profiles/u)
+  assert.match(readFileSync(file, 'utf8'), /^<!-- opl-instructions-version: 2 -->/u)
+})
+
 test('accepts an inherited revision in an unborn repository', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'opl-extraction-version-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
@@ -51,19 +88,21 @@ test('accepts an inherited revision in an unborn repository', (t) => {
   assert.equal(result.status, 0, result.stderr)
 })
 
-test('rejects an unstaged bump when staged instructions changed', (t) => {
+test('automatically bumps and stages the revision when staged instructions changed', (t) => {
   const result = check(t, { staged: instructions(1, '# Updated\n'), working: instructions(2, '# Updated\n') })
-  assert.equal(result.status, 1)
-  assert.match(result.stderr, /Increment its revision, stage the file, and retry/)
+  assert.equal(result.status, 0, result.stderr)
+  assert.match(result.stdout, /Bumped the OPL instruction revision to 2 and staged/u)
 })
 
 test('unrelated staged changes do not inspect an unstaged instruction edit', (t) => {
   assert.equal(check(t, { working: 'invalid local work' }).status, 0)
 })
 
-test('normalizes only BOM and CRLF differences', (t) => {
+test('normalizes BOM and CRLF differences and auto-bumps other staged content edits', (t) => {
   assert.equal(check(t, { staged: '\uFEFF' + instructions(1).replaceAll('\n', '\r\n') }).status, 0)
-  assert.equal(check(t, { staged: instructions(1, '# Instructions \n') }).status, 1)
+  const result = check(t, { staged: instructions(1, '# Instructions \n'), working: instructions(2, '# Instructions \n') })
+  assert.equal(result.status, 0, result.stderr)
+  assert.match(result.stdout, /Bumped the OPL instruction revision/u)
 })
 
 test('accepts initial unversioned adoption only as revision 1', (t) => {

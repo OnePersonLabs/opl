@@ -1,12 +1,10 @@
-<!-- opl-instructions-version: 15 -->
+<!-- opl-instructions-version: 17 -->
 
 # Core Behavior
 
 ## One-Operation Exceptions
 
-Except where a higher-priority instruction forbids the action, every applicable
-user-authored rule in `AGENTS.md`, a skill, a design system, or a
-project policy allows a user-directed exception for one specific operation.
+Every rule allows a user-directed exception for one specific operation.
 The rule remains in force everywhere else and afterward. A request to depart
 from a rule starts the conflict procedure below; it does not itself confirm
 acceptance of consequences the user has not yet seen. After the agent explains
@@ -189,7 +187,7 @@ Store MCP API keys in Windows user environment variables; they pass through to W
 ## Documentation Tool Routing Rules
 
 - Use `Context7` as the primary source for package and framework API docs.
-- Use `docs-mcp-server` for local indexed docs. Use `gh` or local `git` for repository code inspection instead of GitMCP.
+- Use `$docs-manage` and `docs-search`.
 - Retrieve only minimal version-specific slices necessary for the current task; do not pull full document sets unless requested.
 
 ## Subagent Delegation
@@ -201,18 +199,6 @@ descendants. This constraint also applies to unnamed generic subagents.
 Run specialized subagents in parallel for exploration, tests, or log analysis.
 Return summaries from subagents instead of raw intermediate output.
 
-Select a subagent from this list when its responsibility fits the assignment:
-
-- `opl-task-worker`: a substantial separable implementation outcome under a
-  root plan.
-- `opl-grunt-worker`: a bounded, well-specified implementation task.
-- `opl-reviewer`: independent review of consequential plans, diagnoses,
-  architecture, or patches.
-- `opl-qa`: acceptance checks and evidence reporting without product-source
-  edits.
-- `opl-explorer`: bounded repository investigation and execution tracing.
-- `opl-docs-researcher`: authoritative documentation and API verification.
-
 Use `fork_turns="none"` or limited history for a focused assignment when it
 reduces irrelevant context. Use full history only when continuity outweighs its
 cost. Do not reuse an expensive agent merely for convenience. Shared history
@@ -222,6 +208,19 @@ Use `timeout_ms: 1500000` when calling `wait_agent`.
 
 Use `codex exec` only when a separate noninteractive process or workspace is
 required, and set `model` and `model_reasoning_effort` explicitly.
+
+### Subagent Profiles
+
+Use a specific subagent when its responsibility fits the assignment:
+
+- "opl-grunt-worker": "Implement a bounded, well-specified change with explicit ownership and checks."
+- "opl-docs-researcher": "Verify APIs, framework behavior, and release details from authoritative documentation."
+- "opl-explorer": "Investigate a bounded question through repository inspection and evidence tracing."
+- "opl-qa": "Run assigned acceptance checks and report evidence without editing product source."
+- "opl-reviewer": "Independently review consequential plans, diagnoses, architecture, and patches."
+- "opl-slop-analyst": "Resolve an explicit abstract failure-pattern question from selected source-anchored evidence."
+- "opl-slop-reader": "Review bounded canonical prose packets and commit source-anchored incident evidence."
+- "opl-task-worker": "Own a substantial, separable implementation outcome under a root plan."
 
 ### Root Agent Control Plane
 
