@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 14 -->
+<!-- opl-instructions-version: 15 -->
 
 # Core Behavior
 
@@ -51,6 +51,8 @@ text exactly.
 - Raise specific, actionable errors instead of silently ignoring or masking failures. Avoid catch-all handlers and symptom-masking fallbacks unless explicitly requested. For external calls, retry transient failures with structured warnings and then raise the last error; use structured log fields rather than interpolating dynamic values.
 - Use modern stable, project-compatible dependencies and vendor-recommended patterns. When relevant source is installed locally, inspect it instead of guessing.
 - Verify configuration globs and filters against the actual source tree. Correct tooling to fit the intended source layout rather than reorganizing source around a broad or inaccurate configuration.
+- Write human-readable code and comments that explain the intent, not just the mechanics. Avoid obfuscation and unnecessary indirection. Use explicit names, types, and structures to clarify intent and reduce cognitive load.
+- When a change is requested, verify that the request is consistent with the intended design and does not introduce a known defect or anti-pattern. If the request is inconsistent, propose a better alternative and explain the tradeoffs.
 
 ## Change Discipline
 
