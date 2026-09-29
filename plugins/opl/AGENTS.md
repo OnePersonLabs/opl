@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 17 -->
+<!-- opl-instructions-version: 18 -->
 
 # Core Behavior
 
@@ -167,6 +167,46 @@ beginning `request_user_input is not supported in exec mode for thread`, do not
 retry; ask the blocker in the final response. For a rule conflict, finish the
 investigation and disclosure before asking; withhold the affected action until
 the user answers.
+
+## Long Commands and Token Use
+
+Minimize model turns spent waiting for commands. Use the following execution
+policy for tests, builds, benchmarks, migrations, and other local commands:
+
+- Prefer a native completion notification, server-side wait, or tool-provided
+  wait operation. Use its longest appropriate bounded wait instead of repeated
+  short polls.
+- Keep commands expected to finish within about two minutes attached. Use the
+  longest host-supported wait that still permits required user communication.
+  Report only a material stage change, failure, or decision need; do not spend
+  model turns narrating unchanged polls.
+- When repository evidence, measurements, or the current run demonstrates that
+  a safe unattended command will probably exceed two minutes, use
+  `$opl:long-command-wakeup` unless a suitable native completion mechanism
+  exists. A familiar command name alone is not evidence of duration.
+- Batch related finite checks behind one wakeup when they do not require an
+  intervening decision. Register at most one wakeup for the thread turn.
+- Use the loaded skill's detached watcher exactly as specified. Pass the
+  executable and arguments separately, keep its result outside the repository,
+  and report the launch receipt. The receipt proves that the watcher started;
+  it does not prove that the command completed or that queue delivery will
+  succeed.
+- End the turn after the watcher starts. Do not poll the worker, its logs, its
+  status file, or its queue receipt. When the queued completion message arrives,
+  inspect the recorded result artifacts once and continue from that result.
+- Treat only a recorded success state with exit code zero as success. If queue
+  submission fails, retain the result artifacts for one later inspection; do
+  not replace the failed notification with a polling loop.
+- Keep interactive, approval-dependent, destructive, or decision-dependent
+  commands attached. Do not use a detached watcher when the command may require
+  live supervision or when continuing after the turn ends would be unsafe.
+- Do not delegate waiting to a subagent or wrap a native subagent wait in a
+  detached watcher. Use the subagent's completion notification or longest
+  appropriate wait.
+- A wakeup mechanism does not authorize a new execution timeout. Preserve the
+  command's existing timeout contract. Supply a required safety deadline only
+  when the operation already permits it or the caller explicitly requests it;
+  do not turn that deadline into a correctness requirement or an estimate.
 
 ## Skill Reference Sigil
 
