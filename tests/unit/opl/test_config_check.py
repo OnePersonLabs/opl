@@ -117,11 +117,14 @@ class ConfigCheckTests(unittest.TestCase):
         self.assertEqual({key: result["agents"][key] for key in defaults["agents"]}, defaults["agents"])
         self.assertIn("opl-role", result["agents"])
 
-    def test_shipped_defaults_apply_nested_features_and_sol_medium(self):
+    def test_shipped_defaults_apply_nested_features_and_luna_medium(self):
         plugin = ROOT / "plugins" / "opl"
         expected = {
             "features": {
                 "multi_agent_v2": {
+                    "enabled": True,
+                    "hide_spawn_agent_metadata": False,
+                    "expose_spawn_agent_model_overrides": True,
                     "min_wait_timeout_ms": 60000,
                     "default_wait_timeout_ms": 1500000,
                     "max_wait_timeout_ms": 1500000,
@@ -132,7 +135,9 @@ class ConfigCheckTests(unittest.TestCase):
                 "code_mode_interrupt": True,
             },
             "agents": {
-                "default_subagent_model": "gpt-6-sol",
+                "enabled": True,
+                "max_concurrent_threads_per_session": 6,
+                "default_subagent_model": "gpt-6-luna",
                 "default_subagent_reasoning_effort": "medium",
             },
         }
