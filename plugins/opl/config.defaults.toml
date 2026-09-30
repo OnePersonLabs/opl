@@ -1,7 +1,9 @@
 #:schema https://developers.openai.com/codex/config-schema.json
 
-
 [features.multi_agent_v2]
+enabled = true
+hide_spawn_agent_metadata = false
+expose_spawn_agent_model_overrides = true
 min_wait_timeout_ms = 60000
 default_wait_timeout_ms = 1500000
 max_wait_timeout_ms = 1500000
@@ -13,5 +15,7 @@ code_mode_prewarm = true
 code_mode_interrupt = true
 
 [agents]
-default_subagent_model = "gpt-6-sol"
+enabled = true
+max_concurrent_threads_per_session = 6
+default_subagent_model = "gpt-6-luna"
 default_subagent_reasoning_effort = "medium"
