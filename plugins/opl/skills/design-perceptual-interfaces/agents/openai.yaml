@@ -1,7 +1,0 @@
-interface:
-  display_name: "Perceptual Interfaces"
-  short_description: "Design interfaces for clear, reliable decisions"
-  default_prompt: "Use $design-perceptual-interfaces to design or critique this interface for clear comprehension and appropriate action."
-
-policy:
-  allow_implicit_invocation: true

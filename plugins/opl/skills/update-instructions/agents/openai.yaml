@@ -3,4 +3,4 @@ interface:
   short_description: "Merge OPL defaults with your personal instructions"
   default_prompt: "Use $update-instructions to review and reconcile my global instructions with the installed OPL baseline."
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false
