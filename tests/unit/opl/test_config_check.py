@@ -125,7 +125,7 @@ class ConfigCheckTests(unittest.TestCase):
                     "enabled": True,
                     "hide_spawn_agent_metadata": False,
                     "expose_spawn_agent_model_overrides": True,
-                    "min_wait_timeout_ms": 60000,
+                    "min_wait_timeout_ms": 150000,
                     "default_wait_timeout_ms": 1500000,
                     "max_wait_timeout_ms": 1500000,
                 },
@@ -133,6 +133,7 @@ class ConfigCheckTests(unittest.TestCase):
                 "code_mode": True,
                 "code_mode_prewarm": True,
                 "code_mode_interrupt": True,
+                "code_mode_host": True,
             },
             "agents": {
                 "enabled": True,
