@@ -4,7 +4,7 @@
 enabled = true
 hide_spawn_agent_metadata = false
 expose_spawn_agent_model_overrides = true
-min_wait_timeout_ms = 60000
+min_wait_timeout_ms = 150000
 default_wait_timeout_ms = 1500000
 max_wait_timeout_ms = 1500000
 
@@ -13,6 +13,7 @@ apply_patch_preserve_line_endings = true
 code_mode = true
 code_mode_prewarm = true
 code_mode_interrupt = true
+code_mode_host = true
 
 [agents]
 enabled = true
