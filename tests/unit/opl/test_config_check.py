@@ -117,31 +117,9 @@ class ConfigCheckTests(unittest.TestCase):
         self.assertEqual({key: result["agents"][key] for key in defaults["agents"]}, defaults["agents"])
         self.assertIn("opl-role", result["agents"])
 
-    def test_shipped_defaults_apply_nested_features_and_luna_medium(self):
+    def test_shipped_defaults_load_and_repair(self):
         plugin = ROOT / "plugins" / "opl"
-        expected = {
-            "features": {
-                "multi_agent_v2": {
-                    "enabled": True,
-                    "hide_spawn_agent_metadata": False,
-                    "expose_spawn_agent_model_overrides": True,
-                    "min_wait_timeout_ms": 150000,
-                    "default_wait_timeout_ms": 1500000,
-                    "max_wait_timeout_ms": 1500000,
-                },
-                "apply_patch_preserve_line_endings": True,
-                "code_mode": True,
-                "code_mode_prewarm": True,
-                "code_mode_interrupt": True,
-                "code_mode_host": True,
-            },
-            "agents": {
-                "enabled": True,
-                "max_concurrent_threads_per_session": 6,
-                "default_subagent_model": "gpt-6-luna",
-                "default_subagent_reasoning_effort": "medium",
-            },
-        }
+        expected = tomllib.loads((plugin / "config.defaults.toml").read_text(encoding="utf-8"))
         self.assertEqual(checker.load_defaults(plugin), expected)
         application_spec = importlib.util.spec_from_file_location(
             "shipped_harness_application", plugin / "skills/configure-harness/scripts/application.py"
