@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 21 -->
+<!-- opl-instructions-version: 22 -->
 
 # Core Behavior
 
@@ -227,7 +227,7 @@ Store MCP API keys in Windows user environment variables; they pass through to W
 ## Documentation Tool Routing Rules
 
 - Use `Context7` as the primary source for package and framework API docs.
-- Use `$docs-manage` and `docs-search`.
+- Use `$docs-manage` and `$docs-search`.
 - Retrieve only minimal version-specific slices necessary for the current task; do not pull full document sets unless requested.
 
 ## Subagent Delegation
