@@ -68,7 +68,7 @@ test('pre-commit syncs agent TOMLs, bumps the revision, and stages the instructi
   assert.match(result.stdout, /Synchronized agent profiles and staged plugins\/opl\/AGENTS\.md/u)
   const updated = readFileSync(file, 'utf8')
   assert.match(updated, /^<!-- opl-instructions-version: 2 -->/u)
-  assert.match(updated, /- "opl-example": "Updated role description\."/u)
+  assert.match(updated, /- opl-example: Updated role description\./u)
   assert.equal(execFileSync('git', ['diff', '--cached', '--name-only', '--', instructionPath], { cwd: root, encoding: 'utf8' }).trim(), instructionPath)
   const repeated = spawnSync(process.execPath, [guard], { cwd: root, encoding: 'utf8' })
   assert.equal(repeated.status, 0, repeated.stderr)
