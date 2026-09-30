@@ -1,5 +1,5 @@
 name = "opl-reviewer"
-description = "Independently challenge consequential plans and changes with concrete, reproducible findings."
+description = "Independently review a consequential plan or change for concrete defects, risks, and missing evidence."
 model = "gpt-6-sol"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
