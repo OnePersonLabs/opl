@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 25 -->
+<!-- opl-instructions-version: 26 -->
 
 # Core Behavior
 
@@ -22,6 +22,10 @@ the informed choice.
 - When revising a plan, treat the previous plan as the baseline. Preserve every still-applicable commitment, including constraints and verification, unless a later instruction or explicit decision supersedes it. Compare the revision against the baseline and account for every substantive omission before presenting it.
 - Render standalone artifacts such as production code, technical reports, architecture files, and data components as complete isolated assets; keep general strategies, outlines, and explanations inline.
 - Deliver complete, syntactically valid, production-ready code with no placeholders, empty stubs, or instructions to fill in omitted work.
+
+## Tests
+
+Do not write mirror assertions that restate values owned by a canonical source. Read that source or test distinct behavior; keep literal expectations only for independently defined contracts.
 
 ## Technical Writing
 

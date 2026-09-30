@@ -15,7 +15,7 @@ import slop_setup
 
 
 class SetupTests(unittest.TestCase):
-    def test_load_config_defaults_and_isolated_override(self):
+    def test_load_config_uses_isolated_config_and_default_deadline(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "slop-buster.toml"
             path.write_text('data_repo = "C:\\\\audit"\nsource_homes = ["C:\\\\Users\\\\u\\\\.codex"]\n', encoding="utf-8")
@@ -23,7 +23,6 @@ class SetupTests(unittest.TestCase):
                 config = slop_config.load_config()
             self.assertEqual(config["data_repo"], r"C:\audit")
             self.assertEqual(config["deadline_seconds"], 1800)
-            self.assertEqual(config["models"]["reader"], {"name": "gpt-5.6-luna", "effort": "medium"})
 
     def test_invalid_config_fails_instead_of_falling_back(self):
         with tempfile.TemporaryDirectory() as directory:
