@@ -97,8 +97,6 @@ def load_config(config_path: str | None = None) -> dict:
     data_repo = saved.get("data_repo", DEFAULT_DATA_REPO)
     homes = saved.get("source_homes")
     deadline = saved.get("deadline_seconds", 1800)
-    schedule_time = saved.get("schedule_time", "09:00")
-    timezone = saved.get("timezone", "America/Chicago")
     models = saved.get("models", {})
     if not isinstance(data_repo, str) or not data_repo.strip():
         raise ValueError("data_repo must be a nonempty path")
@@ -108,10 +106,6 @@ def load_config(config_path: str | None = None) -> dict:
         raise ValueError("source_homes must contain at least one path")
     if type(deadline) is not int or deadline <= 0:
         raise ValueError("deadline_seconds must be a positive integer")
-    if not isinstance(schedule_time, str) or not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", schedule_time):
-        raise ValueError("schedule_time must be HH:MM")
-    if timezone != "America/Chicago":
-        raise ValueError("Only America/Chicago is supported by the Windows task schedule")
     if not isinstance(models, dict):
         raise ValueError("models must be a table")
     resolved_models = {}
@@ -127,8 +121,6 @@ def load_config(config_path: str | None = None) -> dict:
         "data_repo": native_path(data_repo),
         "source_homes": [native_path(home) for home in homes],
         "deadline_seconds": deadline,
-        "schedule_time": schedule_time,
-        "timezone": timezone,
         "models": resolved_models,
     }
 

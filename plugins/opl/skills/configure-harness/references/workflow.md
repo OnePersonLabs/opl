@@ -36,7 +36,7 @@ For instruction routing, keep a compact always-loaded core in the managed sectio
 
 ## Prepared changes
 
-Keep candidate files separate from live targets. The `prepare` input is a JSON list of objects with `target` and `candidate` paths. Check that each candidate is complete, that its target is intended, and that the preview includes the full change. A section headed `Harness Policies (managed by $opl:configure-harness)` has exactly one owner in the global file. On first setup, its absence is normal; review the insertion point and create exactly one section. Duplicate headings or ambiguous ownership are stop conditions. Personal global instructions outside that section belong to `$opl:update-instructions` reconciliation.
+Keep candidate files separate from live targets. The `prepare` input is a JSON list of objects with `target` and `candidate` paths. Check that each candidate is complete, that its target is intended, and that the preview includes the full change. A section headed `Harness Policies (managed by $opl:configure-harness)` has exactly one owner in the global file. On first setup, its absence is normal; review the insertion point and create exactly one section. Duplicate headings or ambiguous ownership are stop conditions. For global instruction updates outside that section, `$opl:update-instructions` replaces the full file after one approval and saves the prior contents byte for byte in a dated backup; it does not merge personal rules.
 
 For `config.toml`, the transaction accepts ordinary enablement changes and the
 narrow OPL startup baseline only. The plugin-root `config.defaults.toml` file

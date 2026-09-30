@@ -37,12 +37,13 @@ def main():
     message = messages[state["status"]] + f" File: {state['target']}"
     if state["status"] in {"setup", "update", "invalid"}:
         guidance = (
-            " Before continuing the user's pending task, briefly notify the user and ask whether "
-            "they want to review and update their OPL global instructions now. Stop and wait for "
-            "the reply. If the user agrees, run $opl:update-instructions to completion. If the user "
-            "declines, do not run the skill. After either branch is complete, resume the user's "
-            "pending task. The initial agreement starts the review only; apply no instruction change "
-            "until the skill obtains approval for its candidate."
+            f" Before continuing the user's pending task, ask once whether to replace this file with "
+            f"the installed OPL instructions at version {state['bundled_version']}. Explain that "
+            "active custom rules will be replaced, the old file will be saved byte for byte in a "
+            "dated backup, and the rules will not be merged. Stop and wait for the reply. If the user "
+            "agrees, run $opl:update-instructions and treat that yes as approval to apply the "
+            "installed instructions; do not ask for a second approval. If the user declines, do not "
+            "run the skill. After either branch is complete, resume the user's pending task."
         )
     else:
         guidance = " Briefly notify the user and continue the pending task; do not downgrade or change instructions automatically."

@@ -121,13 +121,8 @@ class ConfigCheckTests(unittest.TestCase):
         plugin = ROOT / "plugins" / "opl"
         expected = {
             "features": {
-                "current_time_reminder": {
-                    "enabled": True,
-                    "reminder_interval_seconds": 300,
-                    "delivery_mode": "any_inference",
-                },
                 "multi_agent_v2": {
-                    "min_wait_timeout_ms": 10000,
+                    "min_wait_timeout_ms": 60000,
                     "default_wait_timeout_ms": 1500000,
                     "max_wait_timeout_ms": 1500000,
                 },
@@ -135,7 +130,6 @@ class ConfigCheckTests(unittest.TestCase):
                 "code_mode": True,
                 "code_mode_prewarm": True,
                 "code_mode_interrupt": True,
-                "default_mode_request_user_input": True,
             },
             "agents": {
                 "default_subagent_model": "gpt-6-sol",
@@ -159,13 +153,14 @@ class ConfigCheckTests(unittest.TestCase):
         )
         report, status = checker.command_check(self.home, plugin)
         self.assertEqual(status, 1)
-        self.assertIn("features.current_time_reminder.enabled", {item["path"] for item in report["findings"]})
+        self.assertNotIn("features.current_time_reminder.enabled", {item["path"] for item in report["findings"]})
         self.assertIn("features.multi_agent_v2", {item["path"] for item in report["findings"]})
         _, status = checker.command_fix(self.home, plugin)
         self.assertEqual(status, 0)
         result = self.parsed()
         for key, value in expected["features"].items():
             self.assertEqual(result["features"][key], value)
+        self.assertFalse(result["features"]["current_time_reminder"]["enabled"])
         self.assertFalse(result["features"]["multi_agent"])
         self.assertFalse(result["features"]["hooks"])
         self.assertEqual(result["sandbox_mode"], "workspace-write")

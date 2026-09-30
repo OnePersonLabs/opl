@@ -27,13 +27,13 @@ function fixture(t) {
 
 function assertOptInContext(output) {
   const context = output.hookSpecificOutput.additionalContext
-  assert.match(context, /ask whether.*review.*now/iu)
+  assert.match(context, /ask once whether to replace.*installed OPL instructions/iu)
+  assert.match(context, /custom rules will be replaced.*dated backup.*will not be merged/iu)
   assert.match(context, /stop and wait for.*reply/iu)
-  assert.match(context, /if the user agrees.*\$opl:update-instructions/iu)
+  assert.match(context, /if the user agrees.*\$opl:update-instructions.*do not ask for a second approval/iu)
   assert.match(context, /if the user declines.*do not run/iu)
   assert.match(context, /resume the user.+pending task/iu)
-  assert.match(context, /initial agreement.*review only.*candidate/iu)
-  assert.ok(!context.includes('Run $opl:update-instructions to review the update.'))
+  assert.ok(!context.includes('candidate'))
   return context
 }
 

@@ -87,19 +87,19 @@ class DailyTests(unittest.TestCase):
         self.assertEqual(audit.call_count, 1)
         model.assert_not_called()
 
-    def test_scheduled_filtered_resumes_full_discovery(self):
+    def test_filtered_daily_reports_initial_full_discovery_requirement(self):
         filtered = {"run_id": "filtered", "discovery_required": True,
                     "progress": {"pending": 0, "needs_full_discovery": True}}
         full = {"run_id": "full", "progress": {"pending": 0, "needs_full_discovery": True}}
         done = {"run_id": "full", "status": "complete", "pending": 0, "total": 0}
         with patch.object(slop_daily, "load_config", return_value=self.config), \
              patch.object(slop_daily, "config_file", return_value=self.path), \
-             patch.object(slop_daily, "_audit_json", side_effect=[filtered, full, done, done]) as audit, \
+             patch.object(slop_daily, "_audit_json", return_value=filtered) as audit, \
              patch.object(slop_daily.subprocess, "Popen") as model:
-            result = slop_daily.run_daily(scheduled=True)
-        self.assertEqual(result["mode"], "full")
-        self.assertEqual(result["status"], "no_new_work")
-        self.assertEqual([call.args[2] for call in audit.call_args_list], ["prepare", "prepare", "finish", "status"])
+            result = slop_daily.run_daily()
+        self.assertEqual(result["status"], "needs_initial_full")
+        self.assertEqual(result["action"], "Run slop daily --mode full once before filtered daily runs")
+        self.assertEqual([call.args[2] for call in audit.call_args_list], ["prepare"])
         model.assert_not_called()
 
     def test_json_events_register_session_and_report_usage(self):

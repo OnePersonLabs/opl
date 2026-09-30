@@ -1,4 +1,4 @@
-"""Run one bounded Slop Buster audit from a manual or scheduled console."""
+"""Run one bounded Slop Buster audit from a manual console."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ def _write_json(path: Path, value: dict) -> None:
 
 
 class JobLock:
-    """One job across manual and scheduled invocations sharing a data repository."""
+    """Prevent overlapping manual audit jobs for one data repository."""
 
     def __init__(self, path: Path, stale_after: int):
         self.path = path
@@ -122,8 +122,7 @@ def _stream_codex_events(process: subprocess.Popen, path: Path, observed: dict) 
                 print(event["item"].get("text", ""), flush=True)
 
 
-def run_daily(config_path: str | None = None, *, mode: str = "filtered", scheduled: bool = False,
-              codex: str = "codex") -> dict:
+def run_daily(config_path: str | None = None, *, mode: str = "filtered", codex: str = "codex") -> dict:
     config = load_config(config_path)
     selected_path = config_file(config_path)
     repo = Path(config["data_repo"])
@@ -131,7 +130,7 @@ def run_daily(config_path: str | None = None, *, mode: str = "filtered", schedul
         raise ValueError(f"Slop Buster data repository is not initialized: {repo}; run setup")
     started = time.monotonic()
     stamp = datetime.now(timezone.utc)
-    summary: dict = {"started_at": stamp.isoformat(), "mode": mode, "scheduled": scheduled,
+    summary: dict = {"started_at": stamp.isoformat(), "mode": mode,
                      "status": "starting", "run_id": None, "coverage": None, "pending": None,
                      "feedback_pending_review": None, "usage": None, "usage_available": False}
     summary_path = repo / ".runtime" / "daily-runs" / (stamp.strftime("%Y%m%dT%H%M%S") + "-" + uuid.uuid4().hex[:8] + ".json")
@@ -147,21 +146,9 @@ def run_daily(config_path: str | None = None, *, mode: str = "filtered", schedul
             if not isinstance(summary["run_id"], str) or not isinstance(summary["pending"], int):
                 raise RuntimeError("audit prepare omitted run_id or progress.pending")
             if mode == "filtered" and (prepared.get("discovery_required") or progress.get("needs_full_discovery")):
-                if not scheduled:
-                    summary["status"] = "needs_initial_full"
-                    summary["action"] = "Run slop daily --mode full once before filtered daily runs"
-                    return summary
-                mode = "full"
-                summary["mode"] = mode
-                prepared = _audit_json(selected_path, repo, "prepare", "--mode", mode,
-                                       timeout=max(1, deadline - (time.monotonic() - started)))
-                summary["run_id"] = prepared.get("run_id")
-                progress = prepared.get("progress", {})
-                summary["coverage"] = progress
-                summary["pending"] = progress.get("pending")
-                summary["feedback_pending_review"] = prepared.get("feedback_counts", {}).get("pending_review", 0)
-                if not isinstance(summary["run_id"], str) or not isinstance(summary["pending"], int):
-                    raise RuntimeError("full audit prepare omitted run_id or progress.pending")
+                summary["status"] = "needs_initial_full"
+                summary["action"] = "Run slop daily --mode full once before filtered daily runs"
+                return summary
             if summary["pending"] + progress.get("claimed", 0) == 0 and summary["feedback_pending_review"] == 0:
                 if progress.get("source_gaps"):
                     summary["status"] = "source_gaps"
@@ -253,10 +240,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config")
     parser.add_argument("--mode", choices=("filtered", "full"), default="filtered")
-    parser.add_argument("--scheduled", action="store_true")
     args = parser.parse_args(argv)
     try:
-        result = run_daily(args.config, mode=args.mode, scheduled=args.scheduled)
+        result = run_daily(args.config, mode=args.mode)
     except (OSError, ValueError, subprocess.SubprocessError) as error:
         print(f"Slop Buster daily failed: {error}", file=sys.stderr)
         return 2

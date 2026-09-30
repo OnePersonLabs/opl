@@ -1,6 +1,6 @@
 interface:
   display_name: "Update OPL Instructions"
-  short_description: "Merge OPL defaults with your personal instructions"
-  default_prompt: "Use $update-instructions to review and reconcile my global instructions with the installed OPL baseline."
+  short_description: "Update global instructions with a dated backup"
+  default_prompt: "Use $opl:update-instructions to check whether my global instructions need an update and ask once before replacing them."
 policy:
   allow_implicit_invocation: false

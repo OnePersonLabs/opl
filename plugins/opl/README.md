@@ -26,7 +26,7 @@ Invoke a skill with `$opl:<skill-name>`. Common starting points:
 | [$opl:test-driven-development](skills/test-driven-development/SKILL.md) | Verify behavior through realistic tests. |
 | [$opl:adhd](skills/adhd/SKILL.md) | Preserve task state and keep one active path. |
 | [$opl:configure-harness](skills/configure-harness/SKILL.md) | Compare capabilities and review a deliberate setup. |
-| [$opl:update-instructions](skills/update-instructions/SKILL.md) | Merge versioned defaults with personal instructions. |
+| [$opl:update-instructions](skills/update-instructions/SKILL.md) | Replace outdated global instructions after one approval, keeping a dated backup. |
 | [$opl:handoff](skills/handoff/SKILL.md) | Prepare a resumable task handoff. |
 | [$opl:long-command-wakeup](skills/long-command-wakeup/SKILL.md) | Run a long command and queue a bounded continuation. |
 | [$opl:refresh-local-plugins](skills/refresh-local-plugins/SKILL.md) | Refresh selected local plugins and verify hook trust. |
@@ -35,7 +35,7 @@ All shipped skills are in [skills/](skills/).
 
 ## Instructions and agents
 
-The instruction context hook compares the bundled instruction revision with the user's recorded baseline. Use `$opl:update-instructions` to review a merge when the baseline changes. Approved application verifies the reviewed inputs and backs up the personal file before replacement.
+The instruction context hook compares the installed instruction revision with the user's recorded version. Use `$opl:update-instructions` to replace outdated instructions after one approval. It saves the previous file byte for byte in a dated backup; custom rules are not merged.
 
 OPL ships task worker, grunt worker, reviewer, QA, explorer, and documentation researcher roles in [agents/](agents/). Local installation reconciles their `opl-` role registrations with the installed paths.
 
