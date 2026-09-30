@@ -66,9 +66,9 @@ class HarnessApplication(unittest.TestCase):
 
     def test_config_allows_only_enablement_and_preserves_other_parsed_values(self):
         config = self.home / "config.toml"
-        original = b'''model = "gpt-6-sol"\n[plugins."opl"]\nsource = "marketplace"\n[mcp_servers.docs]\ncommand = "docs"\n[features]\nsandbox = true\n'''
+        original = b'''model = "gpt-6.1-sol"\n[plugins."opl"]\nsource = "marketplace"\n[mcp_servers.docs]\ncommand = "docs"\n[features]\nsandbox = true\n'''
         config.write_bytes(original)
-        good = self.candidate("good.toml", b'''model = "gpt-6-sol"\n[plugins."opl"]\nsource = "marketplace"\nenabled = false\n[plugins."other"]\nenabled = true\n[mcp_servers.docs]\ncommand = "docs"\nenabled = false\n[features]\nsandbox = true\n[[skills.config]]\npath = "C:/skills/example"\nenabled = false\n''')
+        good = self.candidate("good.toml", b'''model = "gpt-6.1-sol"\n[plugins."opl"]\nsource = "marketplace"\nenabled = false\n[plugins."other"]\nenabled = true\n[mcp_servers.docs]\ncommand = "docs"\nenabled = false\n[features]\nsandbox = true\n[[skills.config]]\npath = "C:/skills/example"\nenabled = false\n''')
         application.prepare(self.home, [{"target": str(config), "candidate": str(good)}])
         bad = self.candidate("bad.toml", good.read_bytes().replace(b"sandbox = true", b"sandbox = false"))
         with self.assertRaisesRegex(ValueError, "outside allowed OPL"):

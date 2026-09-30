@@ -1,6 +1,6 @@
 name = "opl-task-worker"
 description = "Own a substantial separable workstream from local planning through implementation, integration, and verification."
-model = "gpt-6-sol"
+model = "gpt-6.1-sol"
 model_reasoning_effort = "medium"
 
 developer_instructions = """

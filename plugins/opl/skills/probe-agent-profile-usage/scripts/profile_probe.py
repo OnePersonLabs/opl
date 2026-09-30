@@ -427,7 +427,7 @@ def main(argv: list[str] | None = None) -> int:
             child.add_argument("--timeout", type=int, default=600, help="Maximum seconds before terminating codex exec")
             child.add_argument("--result-file")
             child.add_argument("--codex", default="codex")
-            child.add_argument("--model", choices=("gpt-6-luna", "gpt-6-sol"), default="gpt-6-luna")
+            child.add_argument("--model", choices=("gpt-6-luna", "gpt-6.1-sol"), default="gpt-6-luna")
             child.add_argument("--effort", choices=("low", "medium", "high"), default="medium")
             child.add_argument("--keep-instrumented", action="store_true", help="Leave profile edits in place after the run")
     args = parser.parse_args(argv)

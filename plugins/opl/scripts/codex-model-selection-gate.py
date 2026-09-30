@@ -217,7 +217,7 @@ def main():
     labels = ', '.join(missing)
     reason = (
         f'codex exec needs an explicit {labels} for this child task. '
-        'Retry with: codex exec -m gpt-6-sol -c model_reasoning_effort=medium '
+        'Retry with: codex exec -m gpt-6-luna -c model_reasoning_effort=high '
         '"<task prompt>" (adjust both settings to the task).'
     )
     print(json.dumps({'hookSpecificOutput': {

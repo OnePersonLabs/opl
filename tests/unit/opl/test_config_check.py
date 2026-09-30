@@ -204,7 +204,7 @@ class ConfigCheckTests(unittest.TestCase):
     def test_ignore_marker_uses_bom_crlf_and_schema_position(self):
         self.config.write_bytes(
             b"\xef\xbb\xbf#:schema https://developers.openai.com/codex/config-schema.json\r\n\r\n"
-            b"# General documentation\r\nmodel = \"gpt-6-sol\"\r\n"
+            b"# General documentation\r\nmodel = \"gpt-6.1-sol\"\r\n"
         )
         report, status = checker.command_ignore(self.home, self.plugin)
         self.assertEqual(status, 0)
@@ -213,7 +213,7 @@ class ConfigCheckTests(unittest.TestCase):
             self.config.read_bytes(),
             b"\xef\xbb\xbf#:schema https://developers.openai.com/codex/config-schema.json\r\n"
             b"# opl:ignore-config-check version=0.2.0\r\n\r\n"
-            b"# General documentation\r\nmodel = \"gpt-6-sol\"\r\n",
+            b"# General documentation\r\nmodel = \"gpt-6.1-sol\"\r\n",
         )
 
     def test_stale_marker_is_removed_then_the_audit_resumes(self):
@@ -236,7 +236,7 @@ class ConfigCheckTests(unittest.TestCase):
     def test_defaults_file_drives_repair_without_engine_changes(self):
         self.agent("role.toml")
         (self.plugin / "config.defaults.toml").write_text(
-            "[features]\nhooks = false\n\n[agents]\ndefault_subagent_model = \"gpt-6-sol\"\nmax_depth = 3\n",
+            "[features]\nhooks = false\n\n[agents]\ndefault_subagent_model = \"gpt-6.1-sol\"\nmax_depth = 3\n",
             encoding="utf-8",
         )
         self.config.write_text("[features]\nhooks = true\n\n[agents]\ndefault_subagent_model = \"gpt-6-luna\"\nmax_depth = 1\n", encoding="utf-8")
@@ -249,7 +249,7 @@ class ConfigCheckTests(unittest.TestCase):
         self.assertIn("applied", fixed)
         result = self.parsed()
         self.assertFalse(result["features"]["hooks"])
-        self.assertEqual(result["agents"]["default_subagent_model"], "gpt-6-sol")
+        self.assertEqual(result["agents"]["default_subagent_model"], "gpt-6.1-sol")
         self.assertEqual(result["agents"]["max_depth"], 3)
 
     def test_policy_settings_require_exact_scalar_types(self):

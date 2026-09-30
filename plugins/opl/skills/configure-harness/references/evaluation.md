@@ -10,17 +10,19 @@ For example, an output-only capability case can use this spec. Write the JSON to
 
 ```json
 {
-  "candidates": {"sample-skill": "1.0.0"},
-  "models": {"executor": "gpt-6-luna", "evaluator": "gpt-6-sol"},
-  "budget": {"maxCases": 2, "maxToolCalls": 4, "maxFollowupCases": 1},
-  "cases": [{
-    "id": "capability-1",
-    "candidateId": "sample-skill",
-    "phase": "capability",
-    "scenario": "Answer a bounded request using the reviewed skill in an isolated test context.",
-    "rubric": "Identify the requested result and cite the observed output that establishes it.",
-    "allowedEffects": []
-  }]
+  "candidates": { "sample-skill": "1.0.0" },
+  "models": { "executor": "gpt-6-luna", "evaluator": "gpt-6.1-sol" },
+  "budget": { "maxCases": 2, "maxToolCalls": 4, "maxFollowupCases": 1 },
+  "cases": [
+    {
+      "id": "capability-1",
+      "candidateId": "sample-skill",
+      "phase": "capability",
+      "scenario": "Answer a bounded request using the reviewed skill in an isolated test context.",
+      "rubric": "Identify the requested result and cite the observed output that establishes it.",
+      "allowedEffects": []
+    }
+  ]
 }
 ```
 
@@ -32,7 +34,7 @@ A capability test asks whether the option can perform a concrete task with its s
 
 Give one fresh native Luna executor only the scenario inputs, allowed effects, relevant candidate access, and case IDs. Batch explicit capability cases when doing so stays within the tool budget. Give a separate fresh Sol evaluator the rubric and observed output or artifacts, with candidate labels anonymized where practical. Do not supply the desired answer, the whole conversation, or the earlier selection rationale to either agent. The evaluator reports evidence for each rubric item, not a single impression of quality. Do not escalate to another review model as a default response to uncertainty; use the one planned follow-up when it can change the decision.
 
-For unaided production-route tests, start a fresh context per case with the same effective configuration a user would receive. Do not mention the candidate skill in the test prompt unless explicit invocation is what the case tests. Repeat independent fresh-context cases only when the decision depends on reliability; report the denominator and observed variation. Use `record` to append bounded observations and `report` to store the evaluator's conclusion. Save each raw output or artifact once within the run and do not rewrite it after review. Keep the immutable raw evidence distinct from the Sol evaluator's summary. A record contains `caseId`, actual `model`, `status` (`success`, `failed`, `blocked`, or `skipped`), `toolCalls`, a concrete `observation`, and optional `artifacts` relative to its run folder. If no model executed, use `model: null` only with blocked or skipped status and zero tool calls. Include observed `usage` counters when available; leave them null rather than estimating them from text length. The report contains `model: "gpt-6-sol"` and `recommendations`, each with `candidateId`, `verdict` (`supported`, `conditional`, `inconclusive`, or `rejected`), recorded `caseIds`, and a reason.
+For unaided production-route tests, start a fresh context per case with the same effective configuration a user would receive. Do not mention the candidate skill in the test prompt unless explicit invocation is what the case tests. Repeat independent fresh-context cases only when the decision depends on reliability; report the denominator and observed variation. Use `record` to append bounded observations and `report` to store the evaluator's conclusion. Save each raw output or artifact once within the run and do not rewrite it after review. Keep the immutable raw evidence distinct from the Sol evaluator's summary. A record contains `caseId`, actual `model`, `status` (`success`, `failed`, `blocked`, or `skipped`), `toolCalls`, a concrete `observation`, and optional `artifacts` relative to its run folder. If no model executed, use `model: null` only with blocked or skipped status and zero tool calls. Include observed `usage` counters when available; leave them null rather than estimating them from text length. The report contains `model: "gpt-6.1-sol"` and `recommendations`, each with `candidateId`, `verdict` (`supported`, `conditional`, `inconclusive`, or `rejected`), recorded `caseIds`, and a reason.
 
 ## Interpretation
 

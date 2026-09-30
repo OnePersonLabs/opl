@@ -25,7 +25,7 @@ def _write_initial_config(path: Path) -> None:
         "deadline_seconds = 1800",
         "",
         "[models.orchestrator]",
-        'name = "gpt-6-sol"',
+        'name = "gpt-6.1-sol"',
         'effort = "medium"',
         "",
         "[models.reader]",
@@ -33,7 +33,7 @@ def _write_initial_config(path: Path) -> None:
         'effort = "medium"',
         "",
         "[models.synthesis]",
-        'name = "gpt-6-sol"',
+        'name = "gpt-6.1-sol"',
         'effort = "high"',
         "",
     ]

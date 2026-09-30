@@ -1,6 +1,6 @@
 name = "opl-ui-worker"
 description = "Own substantial coherent UI/UX implementation and visual interaction integration under the product design contract."
-model = "gpt-6-sol"
+model = "gpt-6.1-sol"
 model_reasoning_effort = "medium"
 
 developer_instructions = """

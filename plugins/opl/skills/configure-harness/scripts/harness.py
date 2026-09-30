@@ -15,7 +15,7 @@ import uuid
 
 sys.dont_write_bytecode = True
 SCHEMA = 1
-MODELS = {"executor": "gpt-6-luna", "evaluator": "gpt-6-sol"}
+MODELS = {"executor": "gpt-6-luna", "evaluator": "gpt-6.1-sol"}
 PHASES = {"capability", "selection", "recovery"}
 
 
@@ -129,7 +129,7 @@ def plan(home, spec):
     if not isinstance(candidates, dict) or not candidates or any(not isinstance(v, str) or not v for v in candidates.values()):
         raise ValueError("candidates must map selected IDs to exact version or content-hash strings")
     if spec.get("models") != MODELS:
-        raise ValueError("models must explicitly select executor gpt-6-luna and evaluator gpt-6-sol")
+        raise ValueError("models must explicitly select executor gpt-6-luna and evaluator gpt-6.1-sol")
     budget = spec.get("budget", {})
     positive(budget.get("maxCases"), "maxCases")
     positive(budget.get("maxToolCalls"), "maxToolCalls")

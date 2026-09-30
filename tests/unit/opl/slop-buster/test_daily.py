@@ -23,7 +23,7 @@ class DailyTests(unittest.TestCase):
         self.repo = Path(self.temp.name) / "data repo"
         (self.repo / ".git").mkdir(parents=True)
         self.config = {"data_repo": str(self.repo), "deadline_seconds": 1800,
-                       "models": {"orchestrator": {"name": "gpt-6-sol", "effort": "medium"}}}
+                       "models": {"orchestrator": {"name": "gpt-6.1-sol", "effort": "medium"}}}
         self.path = Path(self.temp.name) / "config.toml"
 
     def test_no_new_work_never_starts_model_and_finishes_run(self):
@@ -181,7 +181,7 @@ class DailyTests(unittest.TestCase):
         self.assertEqual(result["status"], "incomplete")
         self.assertEqual(model.call_count, 1)
         self.assertEqual(model.call_args.args[0][:6],
-                         ["codex-test", "exec", "-m", "gpt-6-sol", "-c", "model_reasoning_effort=medium"])
+                         ["codex-test", "exec", "-m", "gpt-6.1-sol", "-c", "model_reasoning_effort=medium"])
         self.assertEqual(model.call_args.kwargs["cwd"], self.repo)
         self.assertIn("Do not invoke setup, daily", process.stdin.write.call_args.args[0])
         self.assertIn("seconds", process.stdin.write.call_args.args[0])
