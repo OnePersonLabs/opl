@@ -1,5 +1,5 @@
 name = "opl-qa"
-description = "Execute scoped acceptance checks, including rendered UI flows, without fixing product code."
+description = "Verify scoped acceptance claims, including running UI behavior, without fixing product code."
 model = "gpt-6-luna"
 model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
