@@ -1,0 +1,7 @@
+interface:
+  display_name: "Session History Rebuild"
+  short_description: "Rebuild auditable repository development history"
+  default_prompt: "Use $session-history-rebuild to reconstruct this repository's development history from canonical Codex sessions."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Probe Agent Profile Usage"
+  short_description: "Run a bounded subagent profile usage probe"
+  default_prompt: "Use $probe-agent-profile-usage to run or restore a bounded profile usage probe."
+
+policy:
+  allow_implicit_invocation: false
