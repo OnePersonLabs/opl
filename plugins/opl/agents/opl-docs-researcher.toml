@@ -1,5 +1,5 @@
 name = "opl-docs-researcher"
-description = "Answer version-specific API questions using authoritative docs and active source."
+description = "Research version-sensitive external package or API behavior from authoritative docs and active source."
 model = "gpt-6-luna"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"

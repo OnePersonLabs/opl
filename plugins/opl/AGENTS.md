@@ -200,17 +200,17 @@ Use role TOMLs for responsibilities and skills for task procedures.
 
 ### Subagent Profiles
 
-Use a specific subagent when its responsibility fits the assignment:
+When an assignment matches an agent's description in the list below, spawn the named profile explicitly with `agent_type` (list format: `- <agent_type>: description`):
 
-- "opl-docs-researcher": "Answer version-specific API questions using authoritative docs and active source."
-- "opl-explorer": "Answer a bounded repository question with traced, source-anchored evidence."
-- "opl-grunt-worker": "Implement a well-specified, bounded change; escalate unresolved design decisions."
-- "opl-qa": "Execute scoped acceptance checks, including rendered UI flows, without fixing product code."
-- "opl-reviewer": "Independently challenge consequential plans and changes with concrete, reproducible findings."
-- "opl-slop-analyst": "Resolve an explicit abstract failure-pattern question from selected source-anchored evidence."
-- "opl-slop-reader": "Review bounded canonical prose packets and commit source-anchored incident evidence."
-- "opl-task-worker": "Own a separable workstream from planning through integration and verification."
-- "opl-ui-worker": "Own coherent UI behavior and visual integration within an agreed product/design contract."
+- opl-docs-researcher: Research version-sensitive external package or API behavior from authoritative docs and active source.
+- opl-explorer: Investigate a bounded repository question without editing, tracing the relevant control or data flow.
+- opl-grunt-worker: Implement a small, well-specified change whose design and boundaries are already settled.
+- opl-qa: Verify scoped acceptance claims, including running UI behavior, without fixing product code.
+- opl-reviewer: Independently review a consequential plan or change for concrete defects, risks, and missing evidence.
+- opl-slop-analyst: Resolve an explicit abstract failure-pattern question from selected source-anchored evidence.
+- opl-slop-reader: Review bounded canonical prose packets and commit source-anchored incident evidence.
+- opl-task-worker: Own a substantial separable workstream from local planning through implementation, integration, and verification.
+- opl-ui-worker: Own substantial coherent UI/UX implementation and visual interaction integration under the product design contract.
 
 ### Ownership and fan-out
 

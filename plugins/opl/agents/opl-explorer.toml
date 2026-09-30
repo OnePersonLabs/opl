@@ -1,5 +1,5 @@
 name = "opl-explorer"
-description = "Answer a bounded repository question with traced, source-anchored evidence."
+description = "Investigate a bounded repository question without editing, tracing the relevant control or data flow."
 model = "gpt-6-luna"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"

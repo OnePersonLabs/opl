@@ -33,10 +33,10 @@ function renderProfiles(root) {
     const source = readFileSync(path, 'utf8')
     const name = tomlString(source, 'name', file)
     const description = tomlString(source, 'description', file)
-    return `- ${JSON.stringify(name)}: ${JSON.stringify(description)}`
+    return `- ${name}: ${description}`
   })
 
-  return `${profilesHeading}\n\nUse a specific subagent when its responsibility fits the assignment:\n\n${profiles.join('\n')}\n`
+  return `${profilesHeading}\n\nWhen an assignment matches an agent's description in the list below, spawn the named profile explicitly with \`agent_type\` (list format: \`- <agent_type>: description\`):\n\n${profiles.join('\n')}\n`
 }
 
 function requireStagedAgentSources(root) {
