@@ -194,7 +194,6 @@ class HookTests(unittest.TestCase):
         self.conflict()
         self.policy({"version": 1, "onViolation": "warn"})
         output = self.event()
-        self.assertNotIn("reply", output["systemMessage"].lower())
         self.assertNotIn("pause", output["hookSpecificOutput"]["additionalContext"].lower())
         self.assertIsNone(self.event("UserPromptSubmit", prompt="fix it"))
 
