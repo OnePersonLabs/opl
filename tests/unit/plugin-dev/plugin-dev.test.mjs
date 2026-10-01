@@ -22,10 +22,7 @@ import { join } from 'node:path'
 import readline from 'node:readline'
 const args = process.argv.slice(2)
 appendFileSync(process.env.FAKE_CODEX_LOG, JSON.stringify(args) + '\\n')
-if (process.env.FAKE_EXPECT_CODEX_HOME && process.env.CODEX_HOME !== process.env.FAKE_EXPECT_CODEX_HOME) process.exit(92)
-if (args[0] === 'exec') {
-  process.stdout.write(JSON.stringify({ type: 'item.completed', item: { type: 'agent_message', text: process.env.FAKE_AGENT_MESSAGE || 'Using $adhd.' } }) + '\\n')
-} else if (args[0] === 'app-server') {
+if (args[0] === 'app-server') {
   let trusted = false
   const lines = readline.createInterface({ input: process.stdin })
   lines.on('line', (line) => {
@@ -72,7 +69,7 @@ function commands(path) {
 function fixtureRepository(root) {
   const files = {
     '.agents/plugins/marketplace.json': { name: 'fixture-marketplace', plugins: [{ name: 'fixture', source: { source: 'local', path: './plugins/fixture' }, policy: { installation: 'AVAILABLE', authentication: 'ON_INSTALL' }, category: 'Developer Tools' }] },
-    'tools/plugin-matrix.json': { schemaVersion: 1, evaluation: { model: 'fixture-model', reasoningEffort: 'high' }, rootUnitRoots: [], plugins: { fixture: { unitRoots: ['tests/unit/fixture'], commands: [] } } },
+    'tools/plugin-matrix.json': { schemaVersion: 1, rootUnitRoots: [], plugins: { fixture: { unitRoots: ['tests/unit/fixture'], commands: [] } } },
     'plugins/fixture/.codex-plugin/plugin.json': { name: 'fixture', version: '1.0.0', description: 'Fixture plugin' },
   }
   for (const [path, content] of Object.entries(files)) {
@@ -221,80 +218,10 @@ test('contract accepts Codex skill metadata without a second invocation frontmat
     mkdirSync(join(skill, 'agents'), { recursive: true })
     writeFileSync(join(skill, 'SKILL.md'), '---\nname: fixture-skill\ndescription: A Codex-only fixture skill.\n---\n')
     writeFileSync(join(skill, 'agents', 'openai.yaml'), 'policy:\n  allow_implicit_invocation: false\n')
-    const cases = join(root, 'tests', 'evals', 'cases')
-    mkdirSync(cases, { recursive: true })
-    writeFileSync(join(cases, 'fixture.jsonl'), [
-      { id: 'fixture-skill:direct', skill: 'fixture-skill', kind: 'direct', should_activate: true },
-      { id: 'fixture-skill:indirect', skill: 'fixture-skill', kind: 'indirect', should_activate: false },
-      { id: 'fixture-skill:negative', skill: 'fixture-skill', kind: 'negative', should_activate: false },
-    ].map((item) => JSON.stringify(item)).join('\n') + '\n')
     const result = spawnSync(process.execPath, [fixtureDriver, 'contract', '--plugin', 'fixture'], { encoding: 'utf8' })
     assert.equal(result.status, 0, result.stderr)
   })
 })
-
-test('eval prepares readable skill links and launches a JS Codex fixture', () => {
-  withFakeCodex(({ root, fakeCodex, log }) => {
-    const result = spawnSync(process.execPath, [driver, 'eval', '--plugin', 'opl', '--skill', 'adhd', '--case', 'adhd:direct'], {
-      cwd: repositoryRoot,
-      encoding: 'utf8',
-      env: { ...process.env, CODEX_BIN: fakeCodex, FAKE_CODEX_LOG: log, OPL_PLUGIN_DEV_STATE: join(root, 'state'),
-        CODEX_HOME: join(root, 'authenticated-home'), FAKE_EXPECT_CODEX_HOME: join(root, 'authenticated-home') },
-    })
-    assert.equal(result.status, 0, result.stderr)
-    assert.match(result.stdout, /PASS adhd:direct/u)
-    const args = commands(log)[0]
-    assert.equal(args[args.indexOf('--sandbox') + 1], 'read-only')
-    assert.ok(args.includes('--ignore-user-config'), 'eval must isolate user config while retaining its authenticated home')
-    if (process.platform === 'win32') {
-      const overrides = args.flatMap((argument, index) => argument === '-c' ? [args[index + 1]] : [])
-      assert.ok(overrides.includes('windows.sandbox="unelevated"'), 'Windows read-only evaluations must avoid administrator sandbox setup')
-    }
-    const host = args[args.indexOf('-C') + 1]
-    assert.equal(realpathSync(join(host, '.agents', 'skills', 'adhd')), realpathSync(join(sourcePlugin, 'skills', 'adhd')))
-  })
-})
-
-for (const [label, response, activated] of [
-  ['another skill with a later workflow mention', 'I’m using the **humanizer** skill because the Unslop workflow is about making drafted prose sound direct.', false],
-  ['manual-only namespaced invocation', 'I’m using the requested manual-only **`$opl:unslop`** skill.', true],
-  ['Markdown around the article and skill', 'I’m applying **the `$unslop` skill** now.', true],
-  ['explicitly selected skill', 'I’m using the explicitly selected `unslop` skill to identify its first workflow step.', true],
-  ['explicitly requested skill', 'I’m using the explicitly requested `unslop` skill to identify its first workflow step.', true],
-  ['conditional namespaced selection', 'I’d use the `opl:unslop` skill.', true],
-  ['conditional selection with straight apostrophe', "I'd use `$unslop`.", true],
-  ['expanded conditional selection', 'I would use the `unslop` skill.', true],
-  ['future namespaced selection', 'I’ll use `opl:unslop`.', true],
-  ['future selection with straight apostrophe', "I'll use `$unslop`.", true],
-  ['expanded future selection', 'I will use the `unslop` skill.', true],
-  ['negated future selection', 'I will not use the `unslop` skill.', false],
-  ['negated conditional selection', 'I would not use the `unslop` skill.', false],
-  ['another conditional skill with a later target mention', 'I’d use `humanizer` because the unslop workflow is unavailable.', false],
-  ['another explicitly selected skill with a later target mention', 'I’m using the explicitly selected `humanizer` skill because the unslop workflow is unavailable.', false],
-]) {
-  test(`eval matches the announced skill target: ${label}`, () => {
-    withFakeCodex(({ root, fakeCodex, log }) => {
-      const fixtureDriver = fixtureRepository(root)
-      const manifestPath = join(root, 'plugins', 'fixture', '.codex-plugin', 'plugin.json')
-      const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
-      manifest.skills = './skills/'
-      writeFileSync(manifestPath, JSON.stringify(manifest))
-      const skill = join(root, 'plugins', 'fixture', 'skills', 'unslop')
-      mkdirSync(skill, { recursive: true })
-      writeFileSync(join(skill, 'SKILL.md'), '---\nname: unslop\ndescription: Correct a workflow mistake.\n---\n')
-      const cases = join(root, 'tests', 'evals', 'cases')
-      mkdirSync(cases, { recursive: true })
-      writeFileSync(join(cases, 'fixture.jsonl'), JSON.stringify({ id: 'unslop:direct', skill: 'unslop', kind: 'direct', prompt: 'Use $unslop.', should_activate: true }) + '\n')
-      const result = spawnSync(process.execPath, [fixtureDriver, 'eval', '--plugin', 'fixture', '--skill', 'unslop'], {
-        encoding: 'utf8',
-        env: { ...process.env, CODEX_BIN: fakeCodex, FAKE_CODEX_LOG: log, FAKE_AGENT_MESSAGE: response, OPL_PLUGIN_DEV_STATE: join(root, 'state') },
-      })
-      assert.equal(result.status, activated ? 0 : 1, result.stderr)
-      const receipt = JSON.parse(readFileSync(join(root, '.work', 'eval-results', 'fixture.json'), 'utf8'))[0]
-      assert.equal(receipt.activated, activated)
-    })
-  })
-}
 
 test('installed package discovery launches the Codex app-server without a shell', () => {
   withFakeCodex(({ root, fakeCodex, log }) => {

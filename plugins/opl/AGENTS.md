@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 27 -->
+<!-- opl-instructions-version: 28 -->
 
 # Core Behavior
 
@@ -24,6 +24,14 @@ the informed choice.
 - Deliver complete, syntactically valid, production-ready code with no placeholders, empty stubs, or instructions to fill in omitted work.
 
 ## Tests
+
+Do not add tests for skill invocation. Do not add tests that consume AI tokens
+without explicit permission. If tests are required to prove new behavior or
+validate significant modifications, one-time smoke tests are allowed. Batch and
+defer all tests that require AI usage until the end of the root agent's turn.
+Use as few subagent or `codex exec` prompt batches as possible. Group tests by
+model and effort level. For each batch, use the minimum model and effort level
+that you believe is required.
 
 Do not write mirror assertions that restate values owned by a canonical source. Read that source or test distinct behavior; keep literal expectations only for independently defined contracts.
 

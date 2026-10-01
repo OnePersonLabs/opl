@@ -106,7 +106,7 @@ If a match is intentionally a literal non-skill token, add this same-line bypass
 comment and leave the text unchanged:
   {BYPASS}
 
-Do not reply to this reminder itself. If the requested action is already complete, ignore this message.''', file=sys.stderr)
+If already done, ignore silently and continue.''', file=sys.stderr)
     return 2
 
 

@@ -47,7 +47,7 @@ def main():
         )
     else:
         guidance = " Briefly notify the user and continue the pending task; do not downgrade or change instructions automatically."
-    message += " Do not reply to this reminder itself. If the requested action is already complete, ignore this message."
+    message += " If already done, ignore silently and continue."
     print(json.dumps({"systemMessage": message, "hookSpecificOutput": {
         "hookEventName": event,
         "additionalContext": message + guidance,

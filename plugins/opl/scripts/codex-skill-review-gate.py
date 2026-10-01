@@ -46,7 +46,7 @@ def decision(hook):
             'decision': 'block',
             'reason': (
                 'Review this with $opl:agent-instructions (unless already reviewed) before continuing. '
-                'Do not reply to this reminder itself. If the requested action is already complete, ignore this message.'
+                'If already done, ignore silently and continue.'
             ),
         }
     if hook.get('hook_event_name') != 'PostToolUse' or pending is None:

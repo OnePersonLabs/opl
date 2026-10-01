@@ -65,7 +65,7 @@ For destructive cleanup inside the repo, prefer explicit paths, for example:
 
 This gate is intentionally conservative around recursive removal, parent
 directory traversal, root/home targets, and destructive git history commands.
-Do not reply to this reminder itself. If the requested action is already complete, ignore this message.''', file=sys.stderr)
+If already done, ignore silently and continue.''', file=sys.stderr)
     return 2
 
 

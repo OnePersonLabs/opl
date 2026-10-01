@@ -1,1 +1,1 @@
-node tools/check-opl-instructions-version.mjs
+node tools/check-imported-skill-updates.mjs && node tools/check-opl-instructions-version.mjs

@@ -94,7 +94,7 @@ def main():
                 f"If the git {verb} succeeded, invoke $opl:refresh-local-plugins "
                 "for this local plugin marketplace. Follow the skill's plugin "
                 "selection and authorized Codex home requirements. "
-                "Do not reply to this reminder itself. If the requested action is already complete, ignore this message."
+                "If already done, ignore silently and continue."
             ),
         },
     }))

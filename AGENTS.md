@@ -14,6 +14,16 @@ an unstaged bump does not satisfy the check. Initial version adoption uses 1
 in an existing repository. The first standalone commit preserves the inherited
 revision 10.
 
+## Tests
+
+Do not add tests for skill invocation. Do not add tests that consume AI tokens
+without explicit permission. If tests are required to prove new behavior or
+validate significant modifications, one-time smoke tests are allowed. Batch and
+defer all tests that require AI usage until the end of the root agent's turn.
+Use as few subagent or `codex exec` prompt batches as possible. Group tests by
+model and effort level. For each batch, use the minimum model and effort level
+that you believe is required.
+
 After each executable behavior edit, run the smallest finite focused test that
 can prove the behavior. After it passes, run the deterministic suite for only
 the affected plugin:
@@ -25,8 +35,9 @@ npm run test:unit -- --plugin <plugin-name>
 
 Cross capability boundaries only when the change crosses them:
 
-- Skill instructions or activation metadata: run
-  `npm run eval:smoke -- --plugin <plugin-name> --skill <skill-name>`.
+- Skill instructions or activation metadata: review the changed package and
+  validate its structure. Apply the AI test permission and batching rules above
+  if a one-time behavioral smoke test is needed. Do not add invocation tests.
 - MCP launcher or server metadata: run
   `npm run test:mcp -- --plugin <plugin-name>`.
 - UI code or resources: run `npm run test:ui -- --plugin <plugin-name>`.
@@ -51,9 +62,10 @@ user's existing default Codex home or homes without asking for a path. Use an
 explicit `--target-home` when the user names a home or the task clearly targets
 one, including isolated tests.
 
-The full skill corpus is not a routine update check. Only the explicit
+The full skill corpus is not a routine update check. The explicit
 `npm run release:verify` release gate runs clean installed checks for every
-plugin and behavioral evaluations for every shipped skill. `npm run verify`
+plugin. AI evaluations require explicit permission and follow the batching rules
+above; a release gate does not automatically authorize them. `npm run verify`
 runs the complete deterministic repository gate without model evaluations.
 
 Do not add timestamp cachebusters to plugin versions and do not restore the

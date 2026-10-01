@@ -18,7 +18,7 @@ from slop_catalog import CatalogError, STEERING, load_catalog, match_patterns
 
 
 MAX_INPUT = 256 * 1024
-REMINDER_SUFFIX = " Do not reply to this reminder itself. If the requested action is already complete, ignore this message."
+REMINDER_SUFFIX = " If already done, ignore silently and continue."
 MAX_MESSAGE = 16000
 COOLDOWN_SECONDS = 60
 MARKER = re.compile(r"^SLOP_CHECK ([a-f0-9]{16}) (true|false)$", re.MULTILINE)

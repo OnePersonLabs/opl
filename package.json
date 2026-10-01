@@ -16,7 +16,6 @@
     "test:contract": "node tools/plugin-dev.mjs contract",
     "test:mcp": "node tools/plugin-dev.mjs mcp",
     "test:ui": "node tools/plugin-dev.mjs ui",
-    "eval:smoke": "node tools/plugin-dev.mjs eval",
     "test:installed": "node tools/plugin-dev.mjs installed",
     "verify": "node tools/plugin-dev.mjs verify",
     "release:verify": "node tools/plugin-dev.mjs release",
