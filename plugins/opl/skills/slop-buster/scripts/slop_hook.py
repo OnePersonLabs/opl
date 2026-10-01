@@ -18,6 +18,7 @@ from slop_catalog import CatalogError, STEERING, load_catalog, match_patterns
 
 
 MAX_INPUT = 256 * 1024
+REMINDER_SUFFIX = " Do not reply to this reminder itself. If the requested action is already complete, ignore this message."
 MAX_MESSAGE = 16000
 COOLDOWN_SECONDS = 60
 MARKER = re.compile(r"^SLOP_CHECK ([a-f0-9]{16}) (true|false)$", re.MULTILINE)
@@ -291,7 +292,8 @@ def handle_event(payload: dict[str, Any], config: dict[str, Any], *, db_path: Pa
                        f"Report SLOP_CHECK {alert_id} true or SLOP_CHECK {alert_id} false."
                        for alert_id, match in emitted]
             warning = " ".join(notices)
-            return {"hookSpecificOutput": {"hookEventName": event, "additionalContext": warning[:600]}}
+            warning = warning[:600 - len(REMINDER_SUFFIX)] + REMINDER_SUFFIX
+            return {"hookSpecificOutput": {"hookEventName": event, "additionalContext": warning}}
         if event == "Stop" and not payload.get("stop_hook_active"):
             pending = db.execute("SELECT alert_id,pattern_id FROM alerts WHERE session_id=? "
                                  "AND turn_id=? AND feedback IS NULL ORDER BY created_at LIMIT 1",
@@ -303,7 +305,8 @@ def handle_event(payload: dict[str, Any], config: dict[str, Any], *, db_path: Pa
                 warning = f"Slop check {pending['alert_id']} ({pending['pattern_id']}): "
                 warning += "If the warning applies, correct the response; otherwise continue. "
                 warning += f"Report SLOP_CHECK {pending['alert_id']} true or SLOP_CHECK {pending['alert_id']} false."
-                return {"decision": "block", "reason": warning[:600]}
+                warning = warning[:600 - len(REMINDER_SUFFIX)] + REMINDER_SUFFIX
+                return {"decision": "block", "reason": warning}
     return None
 
 

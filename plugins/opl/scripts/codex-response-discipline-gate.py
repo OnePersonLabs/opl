@@ -23,7 +23,8 @@ def main():
             lines.append(line)
     policy = DisciplinePolicy(hook_input)
     mvp_hits, deferrals = policy.scan('\n'.join(lines))
-    emit_json({'decision': 'block', 'reason': policy.report('response', 'your last response', mvp_hits, deferrals)}
+    emit_json({'decision': 'block', 'reason': policy.report('response', 'your last response', mvp_hits, deferrals)
+               + ' Do not reply to this reminder itself. If the requested action is already complete, ignore this message.'}
               if mvp_hits or deferrals else {'continue': True})
 
 

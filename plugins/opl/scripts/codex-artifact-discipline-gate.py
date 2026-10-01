@@ -21,7 +21,8 @@ def main():
     mvp_hits, deferrals = policy.scan(text)
     if not mvp_hits and not deferrals:
         return 0
-    print(policy.report('edit', f'your edit to: {path}', mvp_hits, deferrals), file=sys.stderr)
+    print(policy.report('edit', f'your edit to: {path}', mvp_hits, deferrals)
+          + ' Do not reply to this reminder itself. If the requested action is already complete, ignore this message.', file=sys.stderr)
     return 2
 
 

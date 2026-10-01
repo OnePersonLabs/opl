@@ -108,25 +108,35 @@ Scanner: phrase matches.
 
 ### 2.4 Negative parallelism
 
-The prose corrects a misconception the reader did not have: `not only ... but also`, `not just X, but Y`, `this isn't X, it's Y`, or `no X, no Y, just Z`.
+The prose corrects a misconception the reader did not have: `not only ... but also`, `not just X, but Y`, `this isn't X, it's Y`, `it's X, not Y`, or `no X, no Y, just Z`. Contrast can be useful, but do not manufacture an opposing idea just to make the sentence sound emphatic.
 
-State the positive claim. Keep a contrast when the reader would reasonably assume the opposite.
+Scanner: common constructions, including `it's X, not Y`.
 
-Scanner: common constructions.
+### 2.5 Generic significance framing
 
-### 2.5 Rule of three
+Phrases such as `why it matters`, `what matters is`, and `the detail that matters` often announce significance without explaining it. The word `matters` is fine when the sentence names a concrete consequence, but remove the framing or state that consequence directly.
+
+Scanner: common generic frames, including `that matters`; review context before rewriting.
+
+### 2.6 Rule of three
 
 Triplets of adjectives or short imperatives can substitute rhythm for information. Keep a three-item list when it is a real list of facts. Otherwise retain the item that matters and vary the rhythm.
 
 Scanner: judgment only because ordinary three-item lists are common.
 
-### 2.6 Elegant variation
+### 2.7 Elegant variation
 
 Older models often cycled through synonyms to avoid repeating a noun. Current Wikipedia guidance treats this as a historical indicator rather than a reliable general sign.
 
 Repeat the plain noun or use a pronoun when synonym cycling calls attention to itself. Do not rewrite ordinary lexical variety.
 
 Scanner: judgment only.
+
+### 2.8 `Honest` as a style cue
+
+Use `honest`, `honestly`, or `honesty` only when the sentence is actually about honesty or dishonesty. Do not use the word as a general marker of candor, uncertainty, or a personal-sounding assessment (`honest take`, `honest uncertainty`, `honestly, ...`).
+
+Scanner: flags these words for context review. Keep them when the sentence directly evaluates honesty or dishonesty.
 
 ## Style and formatting
 
@@ -225,7 +235,7 @@ Scanner: paragraph-opening phrases. Whether the paragraph is redundant remains a
 - Definite claims when the evidence supports them.
 - Specific or unusual facts instead of generic praise.
 - Natural variation in sentence length and rhythm.
-- Honest uncertainty stated once and concretely.
+- Uncertainty stated once and concretely.
 
 ## Do not "fix" these
 

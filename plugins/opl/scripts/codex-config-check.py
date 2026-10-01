@@ -624,14 +624,17 @@ def command_hook(home: Path, plugin_root: Path) -> tuple[dict[str, Any], int]:
         report, _status = command_check(home, plugin_root)
     except ConfigCheckError as error:
         message = f"OPL configuration check could not inspect config.toml: {error}"
-        return {"systemMessage": message, "hookSpecificOutput": {"hookEventName": event,
-                "additionalContext": message + " Tell the user. Do not attempt an automatic repair of invalid TOML. They may repair it manually or choose the versioned OPL configuration-check ignore marker to suppress this check."}}, 0
+        reminder = " Do not reply to this reminder itself. If the requested action is already complete, ignore this message."
+        return {"systemMessage": message + reminder, "hookSpecificOutput": {"hookEventName": event,
+                "additionalContext": message + " Tell the user. Do not attempt an automatic repair of invalid TOML. They may repair it manually or choose the versioned OPL configuration-check ignore marker to suppress this check." + reminder}}, 0
     if report["compliant"]:
         return {}, 0
     summary = "OPL configuration needs attention: " + "; ".join(_finding_text(finding) for finding in report["findings"])
     context = (summary + ". Tell the user the proposed OPL configuration changes, ask whether to fix them or add "
                f"{IGNORE_MARKER} version={report['version']}, and pause before starting their task. Keep the original task in conversation.")
-    return {"systemMessage": summary,
+    reminder = " Do not reply to this reminder itself. If the requested action is already complete, ignore this message."
+    context += reminder
+    return {"systemMessage": summary + reminder,
             "hookSpecificOutput": {"hookEventName": event, "additionalContext": context}}, 0
 
 

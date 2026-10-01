@@ -64,7 +64,8 @@ For destructive cleanup inside the repo, prefer explicit paths, for example:
   Remove-Item -LiteralPath './path/to/generated-dir' -Recurse -Force
 
 This gate is intentionally conservative around recursive removal, parent
-directory traversal, root/home targets, and destructive git history commands.''', file=sys.stderr)
+directory traversal, root/home targets, and destructive git history commands.
+Do not reply to this reminder itself. If the requested action is already complete, ignore this message.''', file=sys.stderr)
     return 2
 
 

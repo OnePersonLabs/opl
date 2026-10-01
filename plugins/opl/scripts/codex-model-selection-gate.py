@@ -218,7 +218,8 @@ def main():
     reason = (
         f'codex exec needs an explicit {labels} for this child task. '
         'Retry with: codex exec -m gpt-6-luna -c model_reasoning_effort=high '
-        '"<task prompt>" (adjust both settings to the task).'
+        '"<task prompt>" (adjust both settings to the task). '
+        'Do not reply to this reminder itself. If the requested action is already complete, ignore this message.'
     )
     print(json.dumps({'hookSpecificOutput': {
         'hookEventName': 'PreToolUse',

@@ -104,7 +104,9 @@ instead, e.g. $<skill-name>.
 
 If a match is intentionally a literal non-skill token, add this same-line bypass
 comment and leave the text unchanged:
-  {BYPASS}''', file=sys.stderr)
+  {BYPASS}
+
+Do not reply to this reminder itself. If the requested action is already complete, ignore this message.''', file=sys.stderr)
     return 2
 
 

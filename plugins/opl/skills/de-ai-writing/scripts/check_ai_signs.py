@@ -92,7 +92,18 @@ RULES = (
         r"\bnot only\b.{0,100}\bbut also\b",
         r"\bnot just\b.{0,100}\b(?:but|it(?:'|’)s)\b",
         r"\bthis (?:is not|isn't|isn’t)\b.{0,100}\b(?:but|it(?:'|’)s)\b",
+        r"\b(?:it(?:'|’)s|this is)\s+[^.!?]{1,100},\s*not\b",
+        r"\b(?:it(?:'|’)s|this is)\s+not\b.{0,100},\s*(?:it(?:'|’)s|this is)\b",
         r"\bno [^,.!?]{1,40},\s*no [^,.!?]{1,40},\s*just\b",
+    )),
+    Rule("2.5", "generic significance framing", compiled(
+        r"\bwhy (?:it|this|that) matters\b",
+        r"\bwhat matters (?:is|here is)\b",
+        r"\b(?:the|a) (?:detail|thing|part|point) that matters\b",
+        r"\bthat matters\b",
+    )),
+    Rule("2.8", "honest as a generic style cue", compiled(
+        r"\bhonest(?:ly|y)?\b",
     )),
     Rule("3.4", "em-dash overuse", compiled(
         r"\s—\s",

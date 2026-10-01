@@ -23,6 +23,17 @@ SIGNS = SCRIPT.parents[1] / "references/signs.md"
 
 
 class ScannerTests(unittest.TestCase):
+    def test_finds_unneeded_contrast_significance_and_honest_style_cues(self):
+        text = (
+            "It's this, not that.\n"
+            "Here's why it matters.\n"
+            "Use the detail that matters.\n"
+            "An honest uncertainty can make the answer feel more personal.\n"
+        )
+        findings = SCANNER.scan_text(text, "sample.txt", ".txt")
+        identifiers = {item.rule_id for item in findings}
+        self.assertEqual(identifiers, {"2.4", "2.5", "2.8"})
+
     def test_finds_lexical_structural_and_density_signs(self):
         text = (
             "# Powerful Tools For Modern Teams\n\n"
