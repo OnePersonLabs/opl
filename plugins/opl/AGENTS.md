@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 32 -->
+<!-- opl-instructions-version: 33 -->
 
 # Core Behavior
 
@@ -363,10 +363,18 @@ likely needs from the user's goal and context, label predictions as assumptions,
 and prefer steps useful even if the prediction is wrong. Predictions do not
 authorize extra features or costly, destructive, or external actions.
 
-For novel software, test the assumption most likely to invalidate dependent
-work with the smallest authorized discriminating check. Use an independent
-correctness oracle. Carry the finding and its limits into a usable path through
-the real components. Preserve unresolved assumptions and reversible boundaries.
+When an experiment can resolve consequential uncertainty, use a railgun
+experiment. Aim at the assumption most likely to invalidate useful work.
+Choose the smallest authorized check that could change the decision. State the
+hypothesis, contrary evidence, and stop condition. Use an independent
+correctness oracle. For agent or workflow
+changes, compare with the current approach under equivalent conditions. Assess
+the intended benefit alongside time, tokens, review effort, and ongoing
+maintenance; report unavailable measurements as unknown. Keep experimental
+changes reversible. Reject an experimental mechanism when its benefit does not
+justify its cost. Preserve applicable requirements. Carry findings and their
+limits into a usable path through the real components. Preserve unresolved
+assumptions and reversible boundaries.
 
 During final diff review, check task-owned changes for abandoned experiments,
 unneeded abstractions, and speculative fallbacks. Remove only established
