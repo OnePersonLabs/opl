@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 31 -->
+<!-- opl-instructions-version: 32 -->
 
 # Core Behavior
 
@@ -34,6 +34,17 @@ model and effort level. For each batch, use the minimum model and effort level
 that you believe is required.
 
 Do not write mirror assertions that restate values owned by a canonical source. Read that source or test distinct behavior; keep literal expectations only for independently defined contracts.
+
+Separate verifying the current change from adding permanent coverage. Use
+existing checks or a one-time probe when they resolve the relevant uncertainty.
+A reproduced failure, warning, fix, or dependency change does not by itself
+justify a permanent test.
+
+Add or retain tests for behaviors and contracts we own when a plausible failure
+matters in actual use and existing checks leave a meaningful gap. Test those
+contracts so different valid implementations can pass. Compare the added
+protection with maintenance cost and the cost of future refactoring. Revise or
+remove tests whose purpose no longer applies; preserve required coverage.
 
 ## Technical Writing
 
@@ -77,9 +88,20 @@ When a change is requested, verify that the request is consistent with the inten
 
 For stale or explicitly removed material, perform deletion-only cleanup of orphaned artifacts, and refactor still-used artifacts to remove dependencies on the deleted material. Do not add absence tests, recurrence guards, or prose mentions of deleted material without explicit instruction to do so.
 
-Add a test, hook, validator, CI check, deny list, or other recurrence guard only when an active producer will recreate the defect, recurrence has been observed more than once, or the guard protects against a concrete security, privacy, data-loss, or release-safety invariant, only after identifying the concrete root cause of the recurrence mechanism and determining that it cannot be removed or mitigated in a more effective way.
+Before adding defensive code or a recurrence guard, trace the trigger to its
+cause, the responsible owner, the failure path that remains after the fix, and
+the existing feedback that detects it. Correct the cause at its owner and use
+or repair existing detection before adding another mechanism. Require a
+concrete gap in protection or timely detection relevant to our use; an external
+diagnostic or a security label alone does not establish that gap.
 
-Do not add recurrence guards for a defect that is already fixed, a removed artifact, or a known false positive.
+Add a recurrence guard, such as a test, hook, validator, CI check, or deny list,
+only when an active producer can recreate the defect, recurrence has been observed
+more than once, or a concrete security, privacy, data-loss, or release-safety
+invariant needs ongoing protection. Identify the recurrence mechanism and
+prefer removing or mitigating it when that gives more effective protection.
+Do not add a guard merely to preserve evidence that a completed fix worked.
+Do not add recurrence guards for removed artifacts or known false positives.
 New repository-wide guards require explicit user approval unless the user requested the guard itself.
 
 ## Style
