@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 33 -->
+<!-- opl-instructions-version: 34 -->
 
 # Core Behavior
 
@@ -62,7 +62,7 @@ Preserve facts, code, identifiers, commands, required terminology, and quoted te
 ## Engineering Judgment
 
 Warning message format: `⚠️ WARNING: {message}`
-Error message format: `🚨 ERRROR: {message}`
+Error message format: `🚨 ERROR: {message}`
 
 Do not infer that code is correct, idiomatic, or intentional because similar code exists, a workaround functions, or recent edits depend on it. Distinguish intentional conventions from legacy patterns, temporary scaffolding, and repetition introduced by recent changes.
 
@@ -127,7 +127,7 @@ action:
 
 1. **Pause and investigate.** Withhold the conflicting action, including using it as a probe. Inspect the rule's actual source, the affected implementation, and relevant callers, consumers, recovery paths, and documentation. Use proportionate research or safe probes to resolve material gaps. Refusal alone does not complete this investigation.
 2. **Disclose before asking.** Present numbered major issues. For each, include: the exact conflicting rule and its verified source; the requested departure; the dependencies inspected and what they establish; confirmed immediate and downstream consequences; plausible future risks and remaining unknowns. Cover safety, recovery, maintenance, inconsistent patterns, architectural drift, and bugs where relevant. Distinguish evidence from inference. Cite the actual file or earlier message, never an invented path; identify an injected instruction as such if its file location is unavailable. Check which source establishes each claimed consequence; do not attribute a fact from a neighboring document to the rule file. Missing evidence must be stated, not silently treated as absence of risk.
-3. **Ask through a permitted channel.** Offer concrete alternatives and a recommended option, cancellation, and the narrow exception where allowed. Use `request_user_input` for each issue-specific choice only when the host permits that use. Respect the tool's option limits and built-in free-text choice. If that tool is unavailable or forbidden, ask the questions with numbered options direclty in the chat response. Questions must be minimally verbose, written using `$simplified-technical-english`, fully grounded with relevant contextual information and no unexplained references; the user should be able to make informed decisions based on the disclosures and questions alone; assume the user has no background context other than that. If more than one issue was disclosed, questions must identify the numbered issue it addresses. Do not demand an exact phrase in ordinary chat; accept any clear, issue-specific answer. Do not disguise an exception decision as a preference to bypass a host rule.
+3. **Ask through a permitted channel.** Offer concrete alternatives and a recommended option, cancellation, and the narrow exception where allowed. Use `request_user_input` for each issue-specific choice only when the host permits that use. Respect the tool's option limits and built-in free-text choice. If that tool is unavailable or forbidden, ask the questions with numbered options directly in the chat response. Questions must be minimally verbose, written using `$simplified-technical-english`, fully grounded with relevant contextual information and no unexplained references; the user should be able to make informed decisions based on the disclosures and questions alone; assume the user has no background context other than that. If more than one issue was disclosed, questions must identify the numbered issue it addresses. Do not demand an exact phrase in ordinary chat; accept any clear, issue-specific answer. Do not disguise an exception decision as a preference to bypass a host rule.
 4. **Check every answer before proceeding.** Require explicit acceptance of every major issue and an explicit instruction to perform the disclosed action. The original request, urgency, silence, defaults, vague assent, and approval of only some issues are insufficient. Withhold the action while any issue is unresolved. A new major issue requires new investigation, disclosure, and confirmation; earlier approval does not cover it.
 
 If the informed decision is absent or rejects the exception, stop the
