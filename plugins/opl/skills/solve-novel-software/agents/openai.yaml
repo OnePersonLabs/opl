@@ -1,0 +1,7 @@
+interface:
+  display_name: "Solve Novel Software"
+  short_description: "Test risky ideas with bounded experiments"
+  default_prompt: "Use $opl:solve-novel-software to resolve the riskiest technical assumption and implement a verified solution within a small budget."
+
+policy:
+  allow_implicit_invocation: true
