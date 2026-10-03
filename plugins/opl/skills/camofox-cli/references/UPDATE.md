@@ -3,7 +3,6 @@ VERSION: {"tree":"076f3ba9747f1687f83b1ad0784856b55197fdb3","commit":"b0e7bacb81
 SKILL SOURCE: "https://github.com/redf0x1/camofox-browser/tree/main/skills/camofox-cli"
 FIX SOURCES: ["https://github.com/redf0x1/camofox-browser/blob/main/src/cli/index.ts","https://github.com/redf0x1/camofox-browser/blob/main/src/cli/commands/interaction.ts","https://github.com/redf0x1/camofox-browser/blob/main/src/cli/commands/content.ts","https://github.com/redf0x1/camofox-browser/blob/main/src/cli/commands/download.ts","https://github.com/redf0x1/camofox-browser/blob/main/src/cli/transport/http.ts","https://github.com/redf0x1/camofox-browser/blob/main/src/cli/server/manager.ts","https://github.com/redf0x1/camofox-browser/blob/main/CHANGELOG.md","Search current redfox CamoFox CLI implementation for drag, extract-structured, unavailable direct-download endpoint, automatic server startup, and Windows headless support. Compare registration and behavior with both skill files before removing or adding a correction."]
 MANAGED FILES: ["references/command-reference.md","SKILL.md"]
-CHECK STATUS: "SUCCESS"
 
 FIXES:
 - Remove the retired drag command from SKILL.md and command-reference.md. Installed redfox 2.4.8 interaction command registration has no drag command.

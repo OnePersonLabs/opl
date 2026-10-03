@@ -3,7 +3,6 @@ VERSION: {"tree":"f0eae420ce38c08be5dc57d9e9f737654dc11545","commit":"b04d610f06
 SKILL SOURCE: "https://github.com/yelban/camofox-browser-skills/tree/main/camofox-browser"
 FIX SOURCES: ["https://github.com/jo-inc/camofox-browser/blob/master/README.md","https://github.com/jo-inc/camofox-browser/blob/master/server.js","https://github.com/jo-inc/camofox-browser/blob/master/lib/macros.js","https://github.com/yelban/camofox-browser-skills/tree/main/camofox-browser","Search current Jo CamoFox documentation for CAMOUFOX_EXECUTABLE, CAMOFOX_INTERACTIVE desktop, access-key authentication, and Windows support. Compare the installed package and owned launcher with the Bash bootstrap before changing installation guidance."]
 MANAGED FILES: ["references/anti-detection.md","references/api-reference.md","references/macros-and-search.md","scripts/camofox.sh","scripts/setup.sh","SKILL.md","templates/multi-session.sh","templates/stealth-scrape.sh"]
-CHECK STATUS: "SUCCESS"
 
 FIXES:
 - Adapt the entrypoint for native Windows and WSL and reuse an existing installation. The upstream Bash helpers bootstrap their own installation and lack current access-key handling. Retain them as compatibility material with an explicit read/adapt condition rather than prescribe execution against an existing server.
