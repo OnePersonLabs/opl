@@ -1,0 +1,6 @@
+interface:
+  display_name: "Codex Hook Debug"
+  short_description: "Diagnose Codex hooks across plugins, user, and repo"
+
+policy:
+  allow_implicit_invocation: true

@@ -19,4 +19,4 @@ code_mode_host = true
 enabled = true
 max_concurrent_threads_per_session = 6
 default_subagent_model = "gpt-6-luna"
-default_subagent_reasoning_effort = "medium"
+default_subagent_reasoning_effort = "high"

@@ -36,7 +36,7 @@ function renderProfiles(root) {
     return `- ${name}: ${description}`
   })
 
-  return `${profilesHeading}\n\nWhen an assignment matches an agent's description in the list below, spawn the named profile explicitly with \`agent_type\` (list format: \`- <agent_type>: description\`):\n\n${profiles.join('\n')}\n`
+  return `${profilesHeading}\n\nAfter deciding to delegate, select the matching named profile explicitly with \`agent_type\` (list format: \`- <agent_type>: description\`):\n\n${profiles.join('\n')}\n`
 }
 
 function requireStagedAgentSources(root) {

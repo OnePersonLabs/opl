@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 34 -->
+<!-- opl-instructions-version: 35 -->
 
 # Core Behavior
 
@@ -243,15 +243,12 @@ After deciding to delegate, select the matching named profile explicitly with `a
 - opl-reviewer: Independently review a consequential plan or change for concrete defects, risks, and missing evidence.
 - opl-slop-analyst: Resolve an explicit abstract failure-pattern question from selected source-anchored evidence.
 - opl-slop-reader: Review bounded canonical prose packets and commit source-anchored incident evidence.
-- opl-task-worker: Own a substantial separable workstream from local planning through implementation, integration, and verification.
-- opl-ui-worker: Own substantial coherent UI/UX implementation and visual interaction integration under the product design contract.
+- opl-task-worker: Implement substantial assigned work through integration and verification.
+- opl-ui-worker: Implement UI/UX and verify visual interactions under the product design contract.
 
-### Ownership and fan-out
+### Delegation limits
 
-The root owns scope, decisions, integration, acceptance, and user communication.
-A lead owns its workstream, not final user acceptance. Split substantial work
-around acceptance, dependencies, and shared contracts; planning does not
-implicitly authorize implementation.
+Planning does not implicitly authorize implementation.
 
 Start at most three assignments; allow six open descendants total and two
 edges: root → lead → worker. Reserve a slot for required review. These are
@@ -327,10 +324,10 @@ Distinguish passed, failed, blocked, and not run. Respect effective permissions;
 report denied operations rather than bypass them. Accept only integrated work
 with required review resolved, assignments accounted for, and limits disclosed.
 
-### UI ownership
+### UI verification
 
-Use one design/integration owner per coherent experience. Settle shared contracts
-before parallel implementation; keep design decisions within the delegated remit.
+Settle shared contracts before parallel implementation; keep design decisions
+within the delegated remit.
 Inspect the running integrated UI and exercise affected journeys at relevant
 viewports/states, including accessibility and recovery. Follow browser routing
 with one controller per session. Screenshots are not interaction proof; source
