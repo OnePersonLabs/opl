@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 37 -->
+<!-- opl-instructions-version: 38 -->
 
 # Core Behavior
 
@@ -223,12 +223,10 @@ turn.
 
 At the end of the turn, after useful work is complete or no further safe
 progress is possible, invoke `request_user_input` with the accumulated
-questions. Ask all outstanding questions in dependency order, using additional
-final calls only when the tool's per-call limit requires it. If a question is a
+questions. Ask all outstanding questions in dependency order. If a question is a
 true blocker, still finish every independent task first, then ask it at the end
 of the turn and stop until the answer arrives. This timing rule does not bypass
-the conflict procedure: investigate and disclose the conflict, withhold the
-affected action, and then ask after independent work is exhausted.
+the conflict procedure.
 
 Non-root agents never invoke `request_user_input`. When messaging is available,
 send a blocking question, 2--3 mutually exclusive options, and a recommendation
@@ -238,11 +236,9 @@ options, recommendation, and evidence. Withhold the blocked action. On
 `request_user_input can only be used by the root thread`, do not retry or invoke
 `$opl:recover-request-user-input`; use this same parent-escalation route.
 
-`request_user_input` is unsupported in noninteractive `codex exec`. On an error
+On an error
 beginning `request_user_input is not supported in exec mode for thread`, do not
-retry; ask the blocker in the final response. For a rule conflict, finish the
-investigation and disclosure before asking; withhold the affected action until
-the user answers.
+retry; ask in the final response.
 
 ## Long Commands and Token Use
 
