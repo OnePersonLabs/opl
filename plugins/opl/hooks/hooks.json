@@ -83,6 +83,17 @@
             "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-skill-reference-sigil-gate.py\""
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/skills/human-collaboration/scripts/human.py\" hook",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/skills/human-collaboration/scripts/human.py\" hook",
+            "timeout": 3,
+            "additionalContextLimit": 2048
+          }
+        ]
       }
     ],
     "Stop": [
@@ -115,6 +126,16 @@
             "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-skill-review-gate.py\"",
             "timeout": 20,
             "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-skill-review-gate.py\""
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/skills/human-collaboration/scripts/human.py\" hook",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/skills/human-collaboration/scripts/human.py\" hook",
+            "timeout": 3
           }
         ]
       }
@@ -154,6 +175,18 @@
             "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-compatibility-check.py\""
           }
         ]
+      },
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/skills/human-collaboration/scripts/human.py\" hook",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/skills/human-collaboration/scripts/human.py\" hook",
+            "timeout": 3,
+            "additionalContextLimit": 2048
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -180,6 +213,17 @@
             "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-compatibility-check.py\"",
             "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-compatibility-check.py\"",
             "timeout": 45
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/skills/human-collaboration/scripts/human.py\" hook",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/skills/human-collaboration/scripts/human.py\" hook",
+            "timeout": 3,
+            "additionalContextLimit": 2048
           }
         ]
       }

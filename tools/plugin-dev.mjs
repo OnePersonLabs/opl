@@ -326,7 +326,12 @@ function runUi(entries = selectedPlugins()) {
   for (const entry of entries) {
     const mode = matrix.plugins[entry.name].uiMode
     if (mode === 'none') console.log(`${entry.name}: UI checks not applicable.`)
-    else fail(`${entry.name}: unsupported UI mode ${mode}`)
+    else if (mode === 'python') {
+      const tests = matrix.plugins[entry.name].uiTests ?? []
+      if (!tests.length) fail(`${entry.name}: no UI tests configured`)
+      for (const path of tests) run([pythonBin(), '-B', resolve(repoRoot, path)])
+      console.log(`${entry.name}: UI checks passed (${tests.length} test files).`)
+    } else fail(`${entry.name}: unsupported UI mode ${mode}`)
   }
 }
 

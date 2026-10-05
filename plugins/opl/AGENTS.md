@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 36 -->
+<!-- opl-instructions-version: 37 -->
 
 # Core Behavior
 
@@ -174,6 +174,43 @@ an exception is allowed; resume only after the user gives it. User choices
 cannot override higher-priority restrictions. Apply this procedure to actual
 conflicts, not routine compliant requests. It takes precedence over this file's
 ordinary assume-and-proceed guidance.
+
+## Human Collaboration
+
+When the user wants substantive participation during orchestrated work, use
+`$opl:human-collaboration`. The root prepares, prioritizes and integrates human
+contributions; workers route proposals through their parent. Include architectural,
+pattern, algorithmic and strategic judgment, experiments and invention. Do not
+manufacture busywork or make the human supervise agent failures.
+
+Keep a durable workspace inbox with stable IDs, a prioritized readable index,
+consequential decisions (including settled choices), and self-contained 1--2-page
+briefs with diagrams, grounded source snapshots, worked cases, alternatives and
+clear invitations. State why an item matters now and what work continues without
+it. Offer one active assignment and a small ready set; retain deferred items,
+combine overlap, and retire obsolete work only with a recorded reason. Queue
+position does not establish that the human has started.
+
+Preserve published briefs and human drafts. A save or changed filesystem timestamp
+is not submission; use the helper's explicit Send/submit path. Submitted responses
+leave the human action queue but remain the root's responsibility until an outcome
+records their effect, remaining question, or reason not adopted. Keep follow-ups
+and source revisions attached to the same item. The human can initiate a challenge
+without an invitation. Silence is not approval and agreement is not test evidence.
+
+On startup, resumption, compaction, before related commitments, and before claiming
+completion, inspect outstanding submissions and reconcile already-claimed work
+with existing task checkpoints. Do not replay external effects on duplicate
+messages. Respect the bound root and perform explicit ownership handoff. Keep
+accepted meaning and evidence in the project's existing records; do not create a
+second scheduler or competing architectural truth.
+
+Publishing a non-blocking contribution mid-turn is permitted and does not invoke
+`request_user_input`. Continue safe independent work. Genuine blockers, approvals,
+and rule exceptions retain the timing, disclosure and permission requirements
+below. The inbox is not an alternate permission channel. Use host notification or
+recovery hooks, never model-mediated polling for a human reply. Start the optional
+phone service only within the authorized local/network scope.
 
 ## Request User Input
 

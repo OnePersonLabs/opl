@@ -1,12 +1,19 @@
 {
   "schemaVersion": 1,
-  "rootUnitRoots": ["tests/unit/plugin-dev"],
+  "rootUnitRoots": [
+    "tests/unit/plugin-dev"
+  ],
   "plugins": {
     "opl": {
-      "unitRoots": ["tests/unit/opl"],
+      "unitRoots": [
+        "tests/unit/opl"
+      ],
       "commands": [],
       "mcpMode": "launcher-contract",
-      "uiMode": "none"
+      "uiMode": "python",
+      "uiTests": [
+        "tests/ui/opl/test_human_collaboration_ui.py"
+      ]
     }
   }
 }

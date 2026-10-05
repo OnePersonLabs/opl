@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <title>OPL Human Inbox</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div><strong>Human inbox</strong><span id="workspace">OPL</span></div>
+    <button id="refresh" type="button">Refresh</button>
+  </header>
+  <div id="notice" role="status" aria-live="polite"></div>
+  <section id="pairing" hidden>
+    <h1>Connect to your workspace</h1>
+    <p>Open the pairing link printed by the local server, or paste its token. Your drafts stay on this device.</p>
+    <form id="pair-form"><label for="token">Pairing token</label><input id="token" type="password" autocomplete="off" required><button type="submit">Connect</button></form>
+  </section>
+  <main id="app" hidden>
+    <section id="queue" aria-label="Contribution inbox">
+      <nav aria-label="Inbox views" id="tabs"></nav>
+      <div class="queue-heading"><h1 id="view-title">Needs you</h1><p id="view-help">Prepared work where your input can make a difference.</p></div>
+      <button id="contribute" type="button">Start a contribution</button>
+      <div id="items"></div>
+    </section>
+    <article id="detail" hidden aria-label="Contribution brief"></article>
+  </main>
+</body>
+</html>

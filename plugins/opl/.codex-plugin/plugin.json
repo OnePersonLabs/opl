@@ -1,6 +1,6 @@
 {
   "name": "opl",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "One-Person Labs shared developer tooling.",
   "license": "MIT",
   "repository": "https://github.com/OnePersonLabs/opl",
@@ -16,7 +16,8 @@
     "sdd",
     "intent-driven-development",
     "agent-utils",
-    "miscellaneous"
+    "miscellaneous",
+    "human-collaboration"
   ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
@@ -24,6 +25,6 @@
   "interface": {
     "displayName": "OPL",
     "shortDescription": "One-Person Labs shared developer tooling",
-    "longDescription": "One-Person Labs skills, agents, integrations, and repository-independent guard hooks, including verified GitHub Issues deferrals and last-resort rejection of unhandled deferrals."
+    "longDescription": "One-Person Labs skills, agents, integrations, and repository-independent guard hooks, including verified GitHub Issues deferrals and last-resort rejection of unhandled deferrals. Includes a durable human-contribution inbox, grounded review briefs, and a local phone reader/reply interface."
   }
 }
