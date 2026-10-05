@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 35 -->
+<!-- opl-instructions-version: 36 -->
 
 # Core Behavior
 
@@ -18,10 +18,38 @@ the informed choice.
 
 ## Planning and Delivery
 
-- Before technical output, map the global scope, hidden dependencies, circular references, and silent failure modes.
+- Before a change, identify the affected behavior, dependencies, and failure paths. Reuse established context and expand investigation when a concrete dependency or uncertainty requires it.
 - When revising a plan, treat the previous plan as the baseline. Preserve every still-applicable commitment, including constraints and verification, unless a later instruction or explicit decision supersedes it. Compare the revision against the baseline and account for every substantive omission before presenting it.
 - Render standalone artifacts such as production code, technical reports, architecture files, and data components as complete isolated assets; keep general strategies, outlines, and explanations inline.
 - Deliver complete, syntactically valid, production-ready code with no placeholders, empty stubs, or instructions to fill in omitted work.
+
+Keep the complete intended outcome visible while finishing connected behavior
+through its actual consumer. Choose work that closes an observable product gap.
+Do not accumulate independently checked components without integrating them, or
+treat an intermediate demonstration as completion of the larger requirement.
+
+## Human Comprehensibility
+
+Human cognitive compatibility is a required acceptance outcome. The user must
+be able to understand the built behavior well enough to spot a wrong assumption
+and direct changes. Passing tests and agent approval do not establish this.
+
+Make purpose, main flow, state changes, and consequential failure behavior clear
+through module interfaces, concrete names, and nearby comments that explain
+reasons and constraints. Explain unfamiliar terms when first using them with
+the user. Keep decisions discoverable without reconstructing the conversation.
+
+Judge structure by how much unrelated knowledge a reader needs for one change.
+Investigate files that accumulate distinct reasons to change. Separate those
+responsibilities behind useful interfaces; avoid fragmentation that makes the
+reader jump through many files. Line counts are a warning signal, not an
+acceptance rule. More documentation cannot compensate for opaque code.
+
+Demonstrate consequential behavior in the running product and explain the path
+in ordinary language. If the user cannot follow it, treat that as an unresolved
+design or communication defect. Revise the structure or explanation before
+adding dependent complexity. Do not claim user comprehension from an agent's
+readability judgment or require approval for every routine edit.
 
 ## Tests
 
@@ -34,6 +62,14 @@ model and effort level. For each batch, use the minimum model and effort level
 that you believe is required.
 
 Do not write mirror assertions that restate values owned by a canonical source. Read that source or test distinct behavior; keep literal expectations only for independently defined contracts.
+
+Choose verification points by the decision or risk they resolve. Probe a costly
+or consequential assumption before building on it. During implementation, use
+the smallest relevant checks. Batch affected integration and regression checks
+when connected behavior is ready, then complete required checks before delivery.
+Repeat or broaden checks after failures, relevant changes, or unresolved risk;
+reuse results whose inputs and scope remain applicable. An edit or commit alone
+does not require a new reviewer or another full suite.
 
 Separate verifying the current change from adding permanent coverage. Use
 existing checks or a one-time probe when they resolve the relevant uncertainty.
@@ -80,7 +116,7 @@ Use modern stable, project-compatible dependencies and vendor-recommended patter
 
 Verify configuration globs and filters against the actual source tree. Correct tooling to fit the intended source layout rather than reorganizing source around a broad or inaccurate configuration.
 
-Write human-readable code and comments that explain the intent, not just the mechanics. Avoid obfuscation and unnecessary indirection. Use explicit names, types, and structures to clarify intent and reduce cognitive load.
+Apply Human Comprehensibility to code, comments, technical explanations, and review.
 
 When a change is requested, verify that the request is consistent with the intended design and does not introduce a known defect or anti-pattern. If the request is inconsistent, propose a better alternative and explain the tradeoffs.
 
@@ -232,6 +268,11 @@ judgment exceeds coordination cost. Keep small or tightly coupled work local;
 do not duplicate assigned work. These rules apply throughout the agent tree.
 Use role TOMLs for responsibilities and skills for task procedures.
 
+Prefer a few substantial assignments that can reach integrated behavior. Count
+context setup, handoffs, review, and integration as costs of delegation. Reuse a
+suitable worker or reviewer for related follow-up work instead of starting a new
+agent for each edit, check, or finding.
+
 ### Subagent Profiles
 
 After deciding to delegate, select the matching named profile explicitly with `agent_type` (list format: `- <agent_type>: description`):
@@ -281,12 +322,21 @@ explicit model and effort, never a policy bypass. Reuse suitable focused workers
 start fresh for independence, contamination, overload, or role mismatch, not
 presumed cache deadlines.
 
-Return conclusions, changed paths, exact checks/results and checked state,
-evidence pointers, counterevidence, gaps, and decisions, not transcripts.
-Parents inspect decisive artifacts rather than repeat investigations. Checkpoint
-constraints, decisions, handles, ownership, budget, evidence, and next actions in
-existing task state. Reconcile live state after handoff or compaction; summaries
-do not validate stale checks. Context isolation is not sandboxing.
+Return conclusions, changed paths, applicable results, counterevidence, gaps,
+and decisions with pointers to decisive evidence. Parents inspect that evidence
+instead of repeating the investigation. Keep one concise current task record:
+constraints, decisions, live assignments, unresolved risks, and next actions.
+Link retained detail; replace superseded status instead of appending a diary.
+Preserve user intent, reasons, exceptions, and unresolved mutation evidence.
+Reconcile live state after handoff; summaries do not validate stale checks.
+
+Use a Git commit or scoped diff to identify reviewed code when sufficient.
+Create an additional hash inventory or snapshot only for a concrete consumer,
+such as detecting changed uncommitted inputs or protecting a repair. Record the
+decision it enables. Byte identity does not prove behavior or intent. Keep raw
+logs and machine evidence outside routine context; return bounded results and
+retrieve further detail only for a specific question. Context isolation is not
+sandboxing.
 
 ### Orchestration
 
@@ -310,6 +360,13 @@ uncertainty. Otherwise use direct checks unless stricter rules apply. Supply
 requirements, baseline, actual change, and facts, not an implementer's verdict.
 Keep review scoped; multiple reviewers need distinct failure questions. Resolve
 competing proposals through evidence or experiments, not voting.
+
+Batch a coherent consequential change for one independent initial review.
+Reuse that reviewer for repair deltas and affected evidence. Start another only
+when independence, missing expertise, overload, or lost context requires it.
+Review the user's ability to follow the behavior and the cost of understanding
+the code, alongside correctness. Do not substitute review of each component for
+verification of the integrated result.
 
 Start final review after the relevant writers and their child processes finish
 changing the target. Identify the reviewed commit, patch, or file snapshot in

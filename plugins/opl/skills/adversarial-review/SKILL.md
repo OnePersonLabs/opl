@@ -17,7 +17,7 @@ If the user gives an explicit scope, review that scope.
 
 If no scope is specified, establish the latest completed review checkpoint in this conversation. On a first pass, review all recoverable committed and uncommitted changes since that checkpoint; if no checkpoint exists, use the full relevant dirty-tree/recent-commit boundary and state it explicitly. Record the boundary in the report so a later remediation pass has a concrete starting point.
 
-After a review has produced findings and fixes are made, treat the next pass as remediation review by default. Start with the fix diff and unresolved findings, then expand through every affected authority, caller, consumer, test, configuration, specification, CI job, and platform lane, plus every file newly changed since the prior checkpoint. Do not reopen unrelated already-reviewed dirty files merely because they remain dirty. If the checkpoint cannot be recovered after compaction or context loss, state that and fall back to the full relevant boundary.
+After findings are repaired, review the fix diff, unresolved findings, affected consumers, and invalidated evidence. Include other changes only when they belong to the assigned scope or a concrete dependency affects the conclusion. Reuse the same independent reviewer and applicable earlier evidence. If the prior boundary cannot be recovered, state the missing context and reconstruct the relevant scope from Git and the task record before expanding the review.
 
 For a dirty worktree, start with:
 
@@ -45,7 +45,7 @@ For OpenSpec changes, read every touched `proposal.md`, `design.md`, `tasks.md`,
 3. Attack the foundation before details.
    - Ask whether the artifact should exist in this shape.
    - Look for wrong ownership, duplicated truth, stale structure, weak enforcement, untestable rules, fake validation, cargo-cult process, and hidden coupling.
-   - Prefer deletion, simplification, tests, hooks, or validators over adding more prose.
+   - Prefer removing an unnecessary mechanism or simplifying its design. Add a test or guard only when the applicable coverage and recurrence rules justify it.
 
 4. Review across failure surfaces.
    - **Architecture:** coupling, dependency direction, ownership, invariants, migration path.
@@ -55,6 +55,7 @@ For OpenSpec changes, read every touched `proposal.md`, `design.md`, `tasks.md`,
    - **Harness and workflow:** missing gates, fake validation, stale test surfaces, nondeterminism, unclear operator state.
    - **Product and UX:** user value, confusing flows, false confidence, weak failure states, operational burden.
    - **Maintenance:** naming drift, duplicated lists, orphaned files, rules without enforcement, comments that describe instead of justify.
+   - **Human comprehension:** whether the user can follow consequential behavior and detect wrong assumptions; whether names, interfaces, and local explanations make that possible without reconstructing a session. Agent judgment alone does not prove user understanding.
 
 5. Verify before accusing when cheap.
    - Search code, docs, specs, and tests for confirming evidence.
@@ -79,13 +80,13 @@ For OpenSpec changes, read every touched `proposal.md`, `design.md`, `tasks.md`,
 
 ## High-Blast-Radius Convergence
 
-For structural-coverage work or an explicit review-loop request, use up to three optional read-only perspectives with non-overlapping lenses: authority/dependency/migration; drift/blast-radius/simplification; and verification/failure/platform evidence. Use fewer or none when the scope is small, one focused pass provides equivalent coverage, or the user limits review cost. Proportional delegation changes parallelism, not the required authority, blast-radius, and verification analysis. Do not let reviewers edit the target.
+Use one scoped independent reviewer for a coherent consequential change. Add a separate read-only perspective only when a named expertise or independence gap warrants its setup and integration cost. Reuse reviewers for repair deltas. Structural coverage determines what must be examined; it does not require a reviewer panel. Do not let reviewers edit the target.
 
 Require each perspective to return severity, claim, evidence anchors, consequence, required fix, a qualitative confidence basis, and missing evidence. Deduplicate by claim and evidence, preserve material disagreements, and distinguish verified facts from inference.
 
 Repeat only when blocker/high disagreement remains, verification contradicts a finding, the last pass adds material evidence, or strict no-unresolved-smell mode still has a credible lower-severity finding to verify after remediation. Stop after three passes unless the user explicitly requires a longer loop. Never translate reviewer agreement into an uncalibrated numeric confidence score.
 
-Return `ACCEPT` only after structural coverage is complete and a fresh independent pass finds no blocker/high issue. Return `INCOMPLETE` while evidence or material disagreement remains. When the user explicitly requires no unresolved smells, every lower-severity finding must also be corrected or rejected with concrete contrary evidence before acceptance, and a fresh pass must confirm that no credible unresolved finding remains at any severity.
+Return `ACCEPT` only after material structural coverage and required independent review establish no blocker/high issue. An independent reviewer can confirm repairs in their existing context; another agent or a cold review is not required. Return `INCOMPLETE` while material evidence or disagreement remains. When the user explicitly requires no unresolved smells, each lower-severity finding must also be corrected or rejected with concrete contrary evidence, and the repair review must confirm its disposition.
 
 ## Mechanical Checks
 
@@ -131,7 +132,7 @@ Use this shape unless the user asks for a different one:
 <What was inspected and found acceptable, or "None" if findings block acceptance.>
 ```
 
-Blocker/high findings block commit, archive, or PR. After fixes, re-read every fixed file, rerun relevant checks, and run the remediation review scope described above, including its affected blast radius and newly changed files.
+Blocker/high findings block commit, archive, or PR. After fixes, re-read every fixed file, rerun relevant checks, and review the repair delta, affected dependencies, and invalidated evidence as described above.
 `INCOMPLETE` also blocks commit, archive, or PR until the named evidence gap is resolved or the scope is explicitly changed by its owner.
 
 - `ACCEPT`: no blocker/high findings and material coverage is established.

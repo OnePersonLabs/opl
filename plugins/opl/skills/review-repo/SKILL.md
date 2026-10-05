@@ -302,17 +302,19 @@ Order corrections so premises are fixed before symptoms. For each wave state:
 
 State what cannot yet be concluded and what evidence would resolve it.
 
-Stop after the audit. Do not implement remediation until the findings have been independently reviewed.
+For an audit-only request, stop after reporting findings. If remediation is
+authorized, the parent adjudicates source-backed findings and assigns repairs.
+Apply the normal independent review requirement to consequential resulting
+changes; reviewing the audit itself is not an additional prerequisite.
 
 ## Maintainer Verification
 
 This skill has behavioral evaluation scenarios in `references/TESTS.md`.
 
-When creating or modifying this skill, run those scenarios using isolated agents:
-
-1. Run each scenario without the proposed skill and record the baseline failure.
-2. Run it again with the skill loaded.
-3. Confirm the agent meets the stated success criteria.
-4. Add new scenarios for any rationalizations or blind spots discovered.
+Review the changed instructions and validate package structure. Run an AI
+behavioral comparison only with explicit permission and when wording presents
+a material unresolved uncertainty. If authorized, select the smallest relevant
+scenario batch, compare against the prior approach, and retain the limits.
+Do not add tests for skill invocation or scenarios merely to record a fix.
 
 `TESTS.md` is for skill development and regression testing. It is not part of the repository audit workflow.

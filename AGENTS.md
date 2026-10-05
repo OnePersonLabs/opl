@@ -24,9 +24,10 @@ Use as few subagent or `codex exec` prompt batches as possible. Group tests by
 model and effort level. For each batch, use the minimum model and effort level
 that you believe is required.
 
-After each executable behavior edit, run the smallest finite focused test that
-can prove the behavior. After it passes, run the deterministic suite for only
-the affected plugin:
+During executable changes, run focused checks when they resolve an implementation
+decision or reproduced failure. At a coherent integration checkpoint, batch the
+deterministic suites for the affected plugin. Reuse results while their relevant
+inputs remain unchanged; do not rerun both suites after each intermediate edit:
 
 ```bash
 npm run test:contract -- --plugin <plugin-name>
