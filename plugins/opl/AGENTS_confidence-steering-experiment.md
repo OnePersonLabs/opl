@@ -144,7 +144,7 @@ read and reviewed supplied source facts. This tests reasoning from a provided
 packet, not successful tool-driven repository inspection. The candidate's failure
 to await review was not repaired with another trial.
 
-# Evidence and current state
+# Evidence and disposition
 
 The retained local evidence is outside shipping files:
 
@@ -157,7 +157,7 @@ The retained local evidence is outside shipping files:
 - [Instruction snapshots and repair metadata](C:/Users/zethj/.local/state/opl/confidence-assimilation/20261005/revision.json)
 
 The user requested discarding the experimental changes after this negative
-result. The shipping and user-level instruction files now contain the exact
+result. The shipping and user-level instruction files were restored to the exact
 pre-experiment content, with only the revision marker advanced from 40 to 42
 to record the rollback. Revision 41's experimental content is no longer active.
 The custom post-refresh rule is preserved, and the original global file has a

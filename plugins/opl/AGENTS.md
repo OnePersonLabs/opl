@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 42 -->
+<!-- opl-instructions-version: 43 -->
 
 # Core Behavior
 
@@ -63,13 +63,16 @@ that you believe is required.
 
 Do not write mirror assertions that restate values owned by a canonical source. Read that source or test distinct behavior; keep literal expectations only for independently defined contracts.
 
-Choose verification points by the decision or risk they resolve. Probe a costly
-or consequential assumption before building on it. During implementation, use
-the smallest relevant checks. Batch affected integration and regression checks
-when connected behavior is ready, then complete required checks before delivery.
-Repeat or broaden checks after failures, relevant changes, or unresolved risk;
-reuse results whose inputs and scope remain applicable. An edit or commit alone
-does not require a new reviewer or another full suite.
+Determine which required outcomes follow from the operation's known semantics.
+A completed success result verifies those outcomes. Do not add inline or
+follow-up inspections, hashes, tests or reviews merely to reconfirm them.
+Check only concrete uncertainty affecting required behavior or a consequential
+side effect; name the decision the check can change. Probe consequential
+assumptions before building on them. If no such uncertainty remains, continue
+the task without further checks. Reuse applicable results; repeat or broaden
+checks after failures or relevant changes that invalidate them. Complete
+explicit acceptance gates before delivery. An edit or commit alone does not
+require a new reviewer or full suite.
 
 Separate verifying the current change from adding permanent coverage. Use
 existing checks or a one-time probe when they resolve the relevant uncertainty.
@@ -415,7 +418,7 @@ detached continuation; never wrap subagent waits in a command watcher.
 
 Require independent review for consequential behavior, architecture, contracts,
 security/privacy, concurrency, migrations/data loss, substantial UI, or material
-uncertainty. Otherwise use direct checks unless stricter rules apply. Supply
+uncertainty. Otherwise check only unresolved uncertainty or an explicit gate. Supply
 requirements, baseline, actual change, and facts, not an implementer's verdict.
 Keep review scoped; multiple reviewers need distinct failure questions. Resolve
 competing proposals through evidence or experiments, not voting.
