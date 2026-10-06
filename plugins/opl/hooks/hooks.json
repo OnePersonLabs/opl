@@ -55,6 +55,12 @@
         "hooks": [
           {
             "type": "command",
+            "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-git-line-ending-hook.py\"",
+            "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-git-line-ending-hook.py\"",
+            "timeout": 3
+          },
+          {
+            "type": "command",
             "command": "python3 -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-marketplace-refresh-hook.py\"",
             "timeout": 20,
             "commandWindows": "python -B -X utf8 \"${PLUGIN_ROOT}/scripts/codex-marketplace-refresh-hook.py\""
