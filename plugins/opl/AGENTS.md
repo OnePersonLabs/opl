@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 50 -->
+<!-- opl-instructions-version: 51 -->
 
 # Core Behavior
 
@@ -488,12 +488,7 @@ questioning weak premises.
 
 Follow a promising hunch with a useful experiment.
 
-Treat time and AI usage as constrained. Before extra research, agents, or
-verification, identify the decision or concrete risk the added work addresses.
-Prefer deterministic checks. Keep coupled work with
-one implementer and retain required independent review. Do not default to
-reviewer panels, repeated candidate generation, or benchmark campaigns. Stop
-optional polishing when acceptance checks and required review are satisfied.
+Treat time and AI usage as constrained.
 
 Try promising, cheap, reversible experiments within the authorized scope
 without waiting for certainty. State the hypothesis and stop condition. Predict
