@@ -89,6 +89,17 @@ class Catalog:
     def stores(self) -> list[Inbox]:
         return [self._open(identifier, path) for identifier, path in self._registrations()]
 
+    def first_available_store(self) -> Inbox:
+        """Return an already-registered inbox that can anchor service startup."""
+        for identifier, path in self._registrations():
+            try:
+                inbox = self._open(identifier, path)
+                inbox.snapshot()
+            except (InboxError, OSError, sqlite3.Error, UnicodeError):
+                continue
+            return inbox
+        raise InboxError("no registered inbox is available to restart the shared service")
+
     def resolve(self, identifier: str | None = None) -> Inbox:
         registrations = self._registrations(identifier)
         if identifier is None:

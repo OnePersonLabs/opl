@@ -75,6 +75,10 @@ def parser() -> argparse.ArgumentParser:
         if name == "serve":
             serve.add_argument("--console", action="store_true", help=argparse.SUPPRESS)
             serve.add_argument("--managed", action="store_true", help=argparse.SUPPRESS)
+    for name, description in (("pause-for-refresh", "record whether the service is running and stop it if so"),
+                             ("resume-after-refresh", "restart the service only if it ran before refresh")):
+        lifecycle = actions.add_parser(name, help=description)
+        lifecycle.add_argument("--catalog", help=argparse.SUPPRESS)
     return value
 
 
@@ -144,6 +148,14 @@ def main() -> int:
             elif command == "notify":
                 from server import notify
                 result = notify(inbox, args.submission, retry=args.retry, thread=args.thread)
+            elif command in {"pause-for-refresh", "resume-after-refresh"}:
+                from catalog import Catalog
+                from service import pause_for_refresh, resume_after_refresh
+                catalog = Catalog(Path(args.catalog)) if args.catalog else Catalog()
+                if command == "pause-for-refresh":
+                    result = pause_for_refresh(catalog, inbox.workspace)
+                else:
+                    result = resume_after_refresh(inbox, catalog)
             elif command in {"serve", "connect"}:
                 from server import HumanServer
                 from catalog import Catalog

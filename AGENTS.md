@@ -14,6 +14,24 @@ an unstaged bump does not satisfy the check. Initial version adoption uses 1
 in an existing repository. The first standalone commit preserves the inherited
 revision 10.
 
+## Human-collaboration service during a local plugin refresh
+
+Before refreshing a local plugin, use `$opl:human-collaboration`'s
+`pause-for-refresh` operation from the workspace being refreshed. It checks
+authenticated readiness, records whether the service was running and its bind
+settings, and stops it gracefully only when it was running. The operation must
+confirm both listener shutdown and process exit; an unresponsive live service
+blocks refresh. Do not run separate repeated service checks. Continue only when
+the operation reports the service stopped or not running.
+
+After the refresh attempt, use the installed `$opl:human-collaboration` skill's
+`resume-after-refresh` operation from the same workspace, even if the installer
+failed. It starts the service only when the pause record says it was running.
+If the installed helper is unavailable because refresh failed, use the source
+skill to resume it. A failed restart keeps the record for retry; report the
+failure and do not clear it. When the service restarts, open and report the new
+pairing URL returned by the operation.
+
 ## After a local plugin refresh
 
 After a successful `$opl:refresh-local-plugins` refresh, run the OPL checks used

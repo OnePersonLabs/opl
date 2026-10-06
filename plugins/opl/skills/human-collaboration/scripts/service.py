@@ -6,6 +6,7 @@ import json
 import logging
 import os
 from pathlib import Path
+import signal
 import subprocess
 import sys
 import time
@@ -142,6 +143,204 @@ def save_receipt(catalog: Catalog, value: dict) -> None:
     path = catalog.directory / "service.json"
     atomic_write(path, json.dumps(value))
     path.chmod(0o600)
+
+
+def _refresh_state_path(catalog: Catalog) -> Path:
+    if catalog.directory is None:
+        raise InboxError("refresh lifecycle requires a persistent service catalog")
+    return catalog.directory / "refresh-state.json"
+
+
+def _read_refresh_state(path: Path) -> dict | None:
+    if path.is_symlink():
+        raise InboxError("the refresh lifecycle record must not be a symlink")
+    if not path.exists():
+        return None
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if (not isinstance(value, dict) or value.get("version") != 1 or
+            not isinstance(value.get("workspace"), str) or
+            not isinstance(value.get("was_running"), bool)):
+        raise InboxError("the refresh lifecycle record is invalid; inspect it before continuing")
+    if value["was_running"] and (
+            not isinstance(value.get("host"), str) or
+            not isinstance(value.get("port"), int) or
+            not isinstance(value.get("allow_lan"), bool) or
+            not isinstance(value.get("wake_root"), bool)):
+        raise InboxError("the refresh lifecycle record is incomplete; inspect it before continuing")
+    return value
+
+
+def _write_refresh_state(path: Path, value: dict) -> None:
+    atomic_write(path, json.dumps(value))
+    path.chmod(0o600)
+
+
+def _same_workspace(left: str, right: Path) -> bool:
+    return Path(left).resolve() == right.resolve()
+
+
+def _process_is_alive(pid: int) -> bool:
+    """Distinguish an exited listener from a live but unresponsive process."""
+    if os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        kernel32.OpenProcess.restype = wintypes.HANDLE
+        process = kernel32.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+        if not process:
+            error = ctypes.get_last_error()
+            if error == 87:  # ERROR_INVALID_PARAMETER: no process has this ID
+                return False
+            if error == 5:  # ERROR_ACCESS_DENIED: process exists but cannot be queried
+                return True
+            raise OSError(error, "could not check the recorded service process")
+        try:
+            exit_code = wintypes.DWORD()
+            kernel32.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+            kernel32.GetExitCodeProcess.restype = wintypes.BOOL
+            if not kernel32.GetExitCodeProcess(process, ctypes.byref(exit_code)):
+                raise ctypes.WinError(ctypes.get_last_error())
+            return exit_code.value == 259  # STILL_ACTIVE
+        finally:
+            kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+            kernel32.CloseHandle(process)
+
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def _send_console_ctrl_c(pid: int) -> None:
+    """Send Ctrl+C to this service's console so its normal cleanup runs."""
+    if os.name != "nt":
+        raise InboxError("console control shutdown is available only on Windows")
+    import ctypes
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.FreeConsole()
+    if not kernel32.AttachConsole(pid):
+        raise InboxError(f"could not attach to the human-collaboration console for process {pid}")
+    try:
+        # The helper shares this console briefly. Ignore Ctrl+C in the helper
+        # for its remaining lifetime while delivering it to the server process.
+        if not kernel32.SetConsoleCtrlHandler(None, True):
+            raise InboxError("could not protect the refresh helper from the console stop signal")
+        if not kernel32.GenerateConsoleCtrlEvent(0, 0):  # CTRL_C_EVENT to this console
+            raise InboxError("could not send Ctrl+C to the human-collaboration console")
+    finally:
+        kernel32.FreeConsole()
+
+
+def _stop_listener(service: dict, catalog: Catalog) -> None:
+    """Stop only the authenticated catalog service recorded at this address."""
+    if os.name == "nt":
+        pid = service.get("pid")
+        if not isinstance(pid, int) or pid <= 0:
+            raise InboxError("the Windows service receipt has no valid process ID")
+        _send_console_ctrl_c(pid)
+    else:
+        pid = service.get("pid")
+        if not isinstance(pid, int) or pid <= 0:
+            raise InboxError("the service receipt has no valid process ID")
+        try:
+            os.kill(pid, signal.SIGINT)
+        except ProcessLookupError:
+            pass
+
+    deadline = time.monotonic() + 10
+    while time.monotonic() < deadline:
+        if (ready(catalog, service["host"], service["port"]) is None and
+                not _process_is_alive(service["pid"])):
+            return
+        time.sleep(0.1)
+    raise InboxError("the service did not stop after a graceful shutdown request; refresh was not prepared")
+
+
+def pause_for_refresh(catalog: Catalog, workspace: Path) -> dict:
+    """Remember whether the current workspace's service was live, then stop it."""
+    path = _refresh_state_path(catalog)
+    state = _read_refresh_state(path)
+    if state is not None:
+        if not _same_workspace(state.get("workspace", ""), workspace):
+            raise InboxError("another workspace owns the pending refresh lifecycle record")
+        if not state.get("was_running"):
+            return {"was_running": False, "stopped": False, "reason": "service was not running before refresh"}
+        service = ready(catalog, state["host"], state["port"])
+        if service is not None:
+            _stop_listener(service, catalog)
+        else:
+            stored_path = catalog.directory / "service.json"
+            if stored_path.is_symlink():
+                raise InboxError("the service receipt must not be a symlink")
+            stored = json.loads(stored_path.read_text(encoding="utf-8")) if stored_path.is_file() else {}
+            if (stored.get("host"), stored.get("port")) != (state["host"], state["port"]):
+                raise InboxError("cannot confirm the previously running service has stopped")
+            pid = stored.get("pid")
+            if not isinstance(pid, int) or _process_is_alive(pid):
+                raise InboxError("the service is not responding but its recorded process is still running; refusing to refresh")
+        return {"was_running": True, "stopped": True, "host": state["host"], "port": state["port"]}
+
+    receipt_path = catalog.directory / "service.json"
+    if receipt_path.is_symlink():
+        raise InboxError("the service receipt must not be a symlink")
+    stored = json.loads(receipt_path.read_text(encoding="utf-8")) if receipt_path.exists() else None
+    service = None
+    if isinstance(stored, dict) and stored.get("catalog_id") == catalog.id:
+        host, port = stored.get("host"), stored.get("port")
+        if not isinstance(host, str) or not isinstance(port, int):
+            raise InboxError("the service receipt is incomplete; refusing to infer that no service is running")
+        service = ready(catalog, host, port)
+        if service is None:
+            pid = stored.get("pid")
+            if not isinstance(pid, int) or _process_is_alive(pid):
+                raise InboxError("the service is not responding but its recorded process is still running; refusing to refresh")
+    elif isinstance(stored, dict):
+        raise InboxError("the service receipt belongs to a different catalog; refusing to infer that no service is running")
+    elif stored is not None:
+        raise InboxError("the service receipt is invalid; refusing to infer that no service is running")
+
+    if service is None:
+        _write_refresh_state(path, {"version": 1, "workspace": str(workspace.resolve()), "was_running": False})
+        return {"was_running": False, "stopped": False, "reason": "service was not running before refresh"}
+
+    address = validate_address(service["host"], service["port"], allow_lan=True)
+    if address.is_unspecified:
+        raise InboxError("the running service uses a wildcard bind and cannot be resumed by the refresh command")
+    catalog.first_available_store()
+    state = {"version": 1, "workspace": str(workspace.resolve()), "was_running": True,
+             "host": service["host"], "port": service["port"],
+             "allow_lan": not address.is_loopback, "wake_root": bool(service.get("wake_root"))}
+    _write_refresh_state(path, state)
+    _stop_listener(service, catalog)
+    return {"was_running": True, "stopped": True, "host": state["host"], "port": state["port"]}
+
+
+def resume_after_refresh(inbox: Inbox, catalog: Catalog) -> dict:
+    """Restart only when pause_for_refresh recorded a live service."""
+    path = _refresh_state_path(catalog)
+    state = _read_refresh_state(path)
+    if state is None:
+        return {"was_running": False, "restarted": False, "reason": "no pending refresh lifecycle record"}
+    if not _same_workspace(state.get("workspace", ""), inbox.workspace):
+        raise InboxError("the pending refresh lifecycle record belongs to another workspace")
+    if not state.get("was_running"):
+        path.unlink()
+        return {"was_running": False, "restarted": False, "reason": "service was not running before refresh"}
+
+    resume_inbox = catalog.first_available_store()
+    service = connect(resume_inbox, state["host"], state["port"], allow_lan=state["allow_lan"],
+                      wake=state["wake_root"], catalog=catalog)
+    path.unlink()
+    return {"was_running": True, "restarted": not service.get("reused", False),
+            "host": service["host"], "port": service["port"], "wake_root": service["wake_root"],
+            "url": service["url"], "lan_ip": service["lan_ip"], "lan_url": service["lan_url"],
+            "access": service["access"]}
 
 
 def open_console() -> None:

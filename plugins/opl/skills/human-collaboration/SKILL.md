@@ -46,6 +46,9 @@ root opens the inbox before preparing contributions:
    path; enrollment remains saved. Reconcile a possibly running process before
    retrying startup.
 
+If the explicit request is to pause or restore the server around a local plugin
+refresh, follow Local plugin refresh below instead of enrolling or connecting.
+
 Hook-directed recovery starts by inspecting existing work. Recheck
 pending input after startup, resumption or compaction, before related commitments,
 and before completion. These checks do not enroll a session or start a server.
@@ -179,6 +182,37 @@ The human may start a contribution in the phone interface or with `contribute`.
 Establish its context before promoting it to a product decision. A human does not
 need an agent's invitation to question the architecture.
 
+## Local plugin refresh
+
+Use this lifecycle only around an explicit local plugin refresh. From the
+workspace being refreshed, run `pause-for-refresh` before the installer and
+`resume-after-refresh` after the installer attempt, even if refresh failed.
+Both commands use the same local service catalog and workspace. The pause
+command checks authenticated readiness, stores whether the service was running
+and its bind settings without copying its pairing token, and stops it gracefully
+only when it was running. It confirms both that the listener is unavailable and
+that the recorded process exited; an unresponsive live process is an error. On
+Windows it sends Ctrl+C to the service's own console; on POSIX it sends SIGINT to
+the recorded service process. If it cannot confirm the stop, do not refresh.
+
+The resume command starts the service only when the pause record says it was
+running. It uses an already-registered workspace from the shared catalog, so the
+workspace being refreshed does not need its own human inbox. If the service was
+initially down or there is no pause record, it does not start one. A failed
+restart leaves the record in place so the same command can retry. A successful
+restart returns a new pairing URL; open and report it, because the previous GUID
+and pairing link stop working after restart. If the installed helper could not
+be updated, the source helper can consume the same record to restore service
+availability.
+
+Run the commands with the helper from the current skill directory before the
+refresh and from the installed skill directory after it:
+
+```text
+<python> -B -X utf8 <skill>/scripts/human.py --workspace <project> pause-for-refresh
+<python> -B -X utf8 <skill>/scripts/human.py --workspace <project> resume-after-refresh
+```
+
 ## Delivery and phone access
 
 The session hooks report outstanding submissions only to their owning root. They
@@ -194,6 +228,8 @@ The terminal shows startup, incoming requests, response status, and shutdown.
 It also prints the full pairing URL, including the GUID and bearer token.
 Logs omit URL queries, authentication headers, and request bodies. Close the
 terminal window or press Ctrl+C to stop the server.
+Use `pause-for-refresh` and `resume-after-refresh` only for the lifecycle above;
+ordinary recovery does not stop or start the service.
 `serve` still runs a foreground service for an individual workspace;
 `serve --catalog <runtime-directory>` serves registered workspaces. The default is `127.0.0.1:8766`.
 Report the pairing link only after the service responds. It contains a bearer token; keep it

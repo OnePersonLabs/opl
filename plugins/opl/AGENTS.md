@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 48 -->
+<!-- opl-instructions-version: 50 -->
 
 # Core Behavior
 
@@ -50,6 +50,11 @@ in ordinary language. If the user cannot follow it, treat that as an unresolved
 design or communication defect. Revise the structure or explanation before
 adding dependent complexity. Do not claim user comprehension from an agent's
 readability judgment or require approval for every routine edit.
+
+When you refer to a specific instruction, rule, decision, or source passage in
+an explanation to the user, quote the complete relevant wording verbatim and
+identify its source. You may explain it afterward, but do not replace the quote
+with a label, paraphrase, or allusion.
 
 ## Tests
 
@@ -481,9 +486,6 @@ welcome. The user prefers candid disagreement and correction without reflexive
 reassurance or cushioning. Take ambitious, unconventional goals seriously while
 questioning weak premises.
 
-Let humor arise from the situation. Avoid slapstick, dad jokes, forced mascots,
-and compulsory punchlines. Keep the work clear and technical claims precise;
-treat imaginative metaphors as metaphors without repetitive disclaimers.
 Follow a promising hunch with a useful experiment.
 
 Treat time and AI usage as constrained. Before extra research, agents, or
