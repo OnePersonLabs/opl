@@ -17,6 +17,9 @@ take a predictable process without forcing identical output.
 - **Score** when the user asks for a score, grade, comparison, or quantitative
   readiness assessment. For a combined update and score request, update first
   and score the final state.
+- **Optimize AGENTS.md** when the user explicitly invokes
+  `$optimize-agent-instructions` for whole-file optimization. For other
+  instruction requests, use the applicable mode above.
 
 ## Establish the Instruction System
 
@@ -27,6 +30,13 @@ duplicate or contradictory guidance before adding another rule.
 
 For current Codex product or format claims, use official OpenAI documentation.
 Prefer installed source and executable help for local tool behavior.
+
+For instruction prose, read
+[$simplified-technical-english](../simplified-technical-english/SKILL.md) and
+apply it while drafting and revising. This includes requirements, procedures,
+agent instructions, and implementation guidance. Preserve quotations, code,
+identifiers, and commands exactly. Use the appropriate human-facing writing
+mode for quoted or generated text intended for non-instruction use.
 
 ## Select the Surface
 
@@ -106,11 +116,29 @@ than adding a counterweight. Delete tutorials, motivational prose, history,
 restated environment facts, and sentences that do not change model behavior.
 Treat size as an attention cost, not a quality signal.
 
+## Optimize Proposed Changes
+
+Whenever authoring or changing AGENTS files or a skill package's instruction
+text, read
+[$optimize-agent-instructions](../optimize-agent-instructions/SKILL.md) and
+apply its **Proposed changes** mode before delivery. This is a required workflow
+dependency, not implicit discovery of the optimizer's standalone mode.
+
+Check the whole affected instruction system for coherence. Before optimization,
+include companion edits needed to resolve conflicting meanings, broken routing,
+or affected dependencies. Supply the pre-edit baseline and complete proposed
+diff, including new files. Revise each added or changed phrase through that mode.
+Leave unrelated text and user changes intact. Check the final system's coherence
+and the diff's scope and meaning, then run the applicable checks.
+If behavioral checks are needed, plan the fewest compatible shot groups and
+follow the host's permission and end-of-turn batching rules.
+
 ## Complete the Work
 
-For updates, review every touched instruction file and its dependencies after
-editing. Fix unresolved references, placeholders, and duplicate or conflicting
-rules, including defects that predate the edit.
+For authoring and updates, review the proposed changes and affected dependencies.
+Fix unresolved references, placeholders, and duplicate or conflicting rules in
+the proposed text, including necessary companion edits. Report unrelated defects
+without expanding the cleanup scope.
 
 For an audit or update, report findings ordered by consequence with file
 evidence, then validation, residual risk, and a concise change summary when

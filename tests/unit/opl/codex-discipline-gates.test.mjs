@@ -131,6 +131,75 @@ test('response blocks an ephemeral deferral without a durable sink', () => {
   assert.match(decision.reason, /defer/i)
 })
 
+test('response scans native rollout messages and the supplied Stop message', () => {
+  const text = 'We can defer the security fix.'
+  const transcript = writeTranscript([{ type: 'response_item', payload: {
+    type: 'message', role: 'assistant', channel: 'final',
+    content: [{ type: 'output_text', text }],
+  } }])
+  try {
+    for (const input of [
+      { transcript_path: transcript.file },
+      { last_assistant_message: text },
+    ]) {
+      assert.equal(responseDecision(runHookStatus('codex-response-discipline-gate.py', input)).decision, 'block')
+    }
+  } finally {
+    rmSync(transcript.dir, { recursive: true, force: true })
+  }
+})
+
+const clarification = [
+  'BLOCKED release-target-1, revision assignment-7.',
+  'Question: Which release target should I use?',
+  'Options: staging; production',
+  'Recommendation: staging',
+  'Evidence: The assignment does not name a target.',
+  'Constraints: Select a target before release.',
+  'Action withheld: Release.',
+  'Parent: /root/release-lead',
+  'Independent work: Validation completed.',
+  'Descendants: None.',
+].join('\n')
+
+test('a complete current clarification can stop while its scoped answer is missing', () => {
+  for (const audience of ['parent', 'user']) {
+    for (const waiting of ['blocked on', 'awaiting', 'pending']) {
+      for (const reference of ['release-target-1', '`release-target-1`']) {
+        const text = `${clarification}\nStatus: ${waiting} the ${audience} answer to ${reference}.`
+        assert.deepEqual(responseDecision(runResponse(text)), { continue: true }, text)
+        const evidence = text.replace('Evidence: The assignment does not name a target.',
+          'Evidence: The release is blocked on this target choice.')
+        assert.deepEqual(responseDecision(runResponse(evidence)), { continue: true }, evidence)
+      }
+    }
+  }
+})
+
+test('clarification status does not hide malformed checkpoints or abandoned work', () => {
+  const waiting = '\nStatus: awaiting the parent answer to release-target-1.'
+  for (const text of [
+    clarification.replace('Evidence: The assignment does not name a target.\n', '') + waiting,
+    clarification + waiting.replace('release-target-1', 'another-question'),
+    clarification + waiting.replace('release-target-1', '`another-question`'),
+    clarification.replace('Recommendation: staging', 'Recommendation: guess') + waiting,
+    clarification + waiting + '\nThe security fix is pending implementation.',
+    clarification + waiting + '\nWe can defer the security fix.',
+    clarification.replace('Evidence: The assignment does not name a target.',
+      'Evidence: We can defer the security fix.') + waiting,
+    clarification.replace('Evidence: The assignment does not name a target.',
+      'Evidence: The security fix is pending implementation.') + waiting,
+    clarification.replace('Evidence: The assignment does not name a target.',
+      'Evidence: The release is blocked on this target choice. The security fix is pending implementation.') + waiting,
+    clarification.replace('Evidence: The assignment does not name a target.',
+      'Evidence: The unrelated task is awaiting the parent answer to release-target-1.extra.') + waiting,
+    clarification.replace('Evidence: The assignment does not name a target.',
+      'Evidence: The unrelated task is awaiting the parent answer to `release-target-1.extra`.') + waiting,
+  ]) {
+    assert.equal(responseDecision(runResponse(text)).decision, 'block', text)
+  }
+})
+
 test('response blocks leaving discovered work alone without a durable sink', () => {
   for (const text of [
     'I’ll leave that unrelated issue alone.',

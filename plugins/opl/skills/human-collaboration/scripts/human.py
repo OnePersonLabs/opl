@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import ipaddress
 import json
 import os
 from pathlib import Path
@@ -19,13 +18,15 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--workspace", default=os.getcwd())
     value.add_argument("--thread", default=os.environ.get("CODEX_THREAD_ID"))
     actions = value.add_subparsers(dest="command", required=True)
-    actions.add_parser("init")
+    initialize = actions.add_parser("init")
+    initialize.add_argument("--title")
     actions.add_parser("hook")
     actions.add_parser("list")
     actions.add_parser("pending")
     actions.add_parser("refresh")
     bind = actions.add_parser("bind")
     bind.add_argument("--reason", required=True)
+    bind.add_argument("--from-thread", help="session to transfer; required when several roots are registered")
     contribute = actions.add_parser("contribute", help="submit a human-initiated contribution")
     contribute.add_argument("note", help="JSON with title, body and a stable request_id; file or - for stdin")
     contribute.add_argument("--notify", action="store_true")
@@ -48,6 +49,11 @@ def parser() -> argparse.ArgumentParser:
     outcome = actions.add_parser("outcome")
     outcome.add_argument("submission")
     outcome.add_argument("result", help="JSON outcome file, or - for stdin")
+    assume = actions.add_parser("assume")
+    assume.add_argument("item")
+    assume.add_argument("--question", action="append", required=True)
+    assume.add_argument("--reason", required=True)
+    assume.add_argument("--revision", type=int)
     for name in ("start", "later", "ready", "retire", "rank"):
         action = actions.add_parser(name)
         action.add_argument("item")
@@ -58,11 +64,14 @@ def parser() -> argparse.ArgumentParser:
     notification = actions.add_parser("notify")
     notification.add_argument("submission")
     notification.add_argument("--retry", action="store_true")
-    serve = actions.add_parser("serve")
-    serve.add_argument("--host", default="127.0.0.1")
-    serve.add_argument("--port", type=int, default=8766)
-    serve.add_argument("--allow-lan", action="store_true")
-    serve.add_argument("--wake-root", action="store_true")
+    for name in ("serve", "connect"):
+        serve = actions.add_parser(name)
+        serve.add_argument("--host", default="127.0.0.1", help="literal bind IP, or lan to detect a private LAN IPv4 address")
+        serve.add_argument("--port", type=int, default=8766)
+        serve.add_argument("--allow-lan", action="store_true")
+        serve.add_argument("--wake-root", action="store_true")
+        serve.add_argument("--register-workspace", action="append", default=[], help="additional initialized workspace to register locally")
+        serve.add_argument("--catalog", help=argparse.SUPPRESS)
     return value
 
 
@@ -87,15 +96,17 @@ def main() -> int:
             inbox = Inbox(args.workspace)
             command = args.command
             if command == "init":
-                result = inbox.init(args.thread)
+                result = inbox.init(args.thread, args.title)
+                from catalog import Catalog
+                Catalog().register(inbox)
             elif command == "bind":
-                result = inbox.bind(args.thread, args.reason)
+                result = inbox.bind(args.thread, args.reason, args.from_thread)
             elif command == "contribute":
                 note = read_json(args.note)
-                result = inbox.contribute(note.get("title"), note.get("body"), note.get("request_id"))
+                result = inbox.contribute(note.get("title"), note.get("body"), note.get("request_id"), args.thread)
                 if args.notify:
                     from server import notify
-                    result["notification"] = notify(inbox, result["id"])
+                    result["notification"] = notify(inbox, result["id"], thread=args.thread)
             elif command == "publish":
                 result = inbox.publish(read_json(args.spec), args.thread)
             elif command == "revise":
@@ -106,38 +117,52 @@ def main() -> int:
                 inbox.refresh()
                 result = {"inbox": str(inbox.root / "INBOX.md"), "decisions": str(inbox.root / "DECISIONS.md")}
             elif command == "list":
-                result = inbox.snapshot()
+                result = inbox.snapshot(args.thread)
             elif command == "pending":
                 # A compact recovery index; fetch only the relevant full item next.
                 result = [{key: receipt[key] for key in ("id", "item", "revision", "kind", "state", "claimed_by", "created", "queue")}
-                          for receipt in inbox.snapshot()["pending"]]
+                          for receipt in inbox.snapshot(args.thread)["pending"]]
             elif command == "submit":
                 result = inbox.submit_file(args.item, args.revision, args.kind)
                 if args.notify:
                     from server import notify
-                    result["notification"] = notify(inbox, result["id"])
+                    result["notification"] = notify(inbox, result["id"], thread=args.thread)
             elif command == "claim":
                 result = inbox.claim(args.submission, args.thread)
             elif command == "outcome":
                 result = inbox.outcome(args.submission, read_json(args.result), args.thread)
+            elif command == "assume":
+                result = inbox.assume(args.item, args.question, args.reason, args.thread, args.revision)
             elif command in {"start", "later", "ready", "retire", "rank"}:
                 result = inbox.move(args.item, command, getattr(args, "reason", ""), getattr(args, "priority", None), args.thread)
             elif command == "notify":
                 from server import notify
-                result = notify(inbox, args.submission, retry=args.retry)
-            elif command == "serve":
+                result = notify(inbox, args.submission, retry=args.retry, thread=args.thread)
+            elif command in {"serve", "connect"}:
                 from server import HumanServer
-                address = ipaddress.ip_address(args.host)
-                if not address.is_loopback and not args.allow_lan:
-                    raise InboxError("non-loopback binding requires --allow-lan; use a trusted LAN or VPN, not public HTTP")
-                if not 0 <= args.port <= 65535:
-                    raise InboxError("port must be between 0 and 65535")
+                from catalog import Catalog
+                from service import connect, receipt, save_receipt, validate_address
+                if args.host == "lan":
+                    if not args.allow_lan:
+                        raise InboxError("LAN startup requires --allow-lan")
+                    from network import lan_address
+                    args.host = lan_address()
+                validate_address(args.host, args.port, args.allow_lan)
+                catalog = (Catalog(Path(args.catalog)) if args.catalog else
+                           (Catalog() if command == "connect" else Catalog(inboxes=[inbox])))
+                catalog.register(inbox)
+                for workspace in args.register_workspace:
+                    catalog.register(Inbox(workspace))
                 inbox.refresh()
-                server = HumanServer(inbox, args.host, args.port, wake=args.wake_root)
-                host = f"[{args.host}]" if address.version == 6 else args.host
-                print(json.dumps({"url": f"http://{host}:{server.server_address[1]}/#token={server.token}",
-                                  "workspace": str(inbox.workspace), "wake_root": args.wake_root,
-                                  "note": "For wildcard binding, replace the wildcard with this device's reachable LAN/VPN IP. HTTP is not encrypted."}), flush=True)
+                if command == "connect":
+                    result = connect(inbox, args.host, args.port, allow_lan=args.allow_lan, wake=args.wake_root, catalog=catalog)
+                    print(json.dumps(result, ensure_ascii=False, indent=2))
+                    return 0
+                server = HumanServer(inbox, args.host, args.port, wake=args.wake_root, catalog=catalog)
+                value = receipt(server, args.host, catalog)
+                if catalog.directory is not None:
+                    save_receipt(catalog, value)
+                print(json.dumps(value), flush=True)
                 try:
                     server.serve_forever()
                 except KeyboardInterrupt:

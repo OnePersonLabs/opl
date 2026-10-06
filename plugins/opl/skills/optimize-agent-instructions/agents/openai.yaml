@@ -1,7 +1,7 @@
 interface:
   display_name: "Optimize Agent Instructions"
-  short_description: "Test and streamline AGENTS.md steering"
-  default_prompt: "Use $optimize-agent-instructions to test and consolidate my global and project AGENTS.md guidance."
+  short_description: "Optimize AGENTS and proposed skill instructions"
+  default_prompt: "Use $optimize-agent-instructions to minimize every part of my global and project AGENTS.md guidance with bounded behavioral comparisons."
 
 policy:
   allow_implicit_invocation: false

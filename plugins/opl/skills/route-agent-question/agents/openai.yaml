@@ -1,0 +1,6 @@
+interface:
+  display_name: "Route Agent Question"
+  short_description: "Decide, relay, and return assignment questions"
+  default_prompt: "Use $opl:route-agent-question to resolve or relay the blocked assignment's question and return a scoped answer."
+policy:
+  allow_implicit_invocation: true

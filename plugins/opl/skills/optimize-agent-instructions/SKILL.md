@@ -1,130 +1,224 @@
 ---
 name: optimize-agent-instructions
-description: Optimize the instruction text physically present in global and project AGENTS.md files through clean-context paired behavioral tests. Use when a user wants to consolidate global and project agent guidance, remove steering that duplicates default model behavior, preserve operational instructions, or maintain scope-specific AGENTS.excluded.md records with timestamped source backups.
+description: Minimize AGENTS.md guidance or proposed AGENTS and skill instruction changes through phrase-level scrutiny and bounded behavioral comparisons.
 ---
 
 # Optimize Agent Instructions
 
-Optimize only the text physically present in the applicable `AGENTS.md` files. Treat `@` imports and every other referenced file as opaque text. Never open, search, test, or modify their targets.
+Treat every in-scope instruction span as unproven, down to individual
+clauses, qualifiers, and phrases. Assume each part is verbose, unnecessary,
+harmful, misplaced, and underspecified. Check whether its abstraction makes
+triggers, actions, or fallbacks unreliable. Seek evidence against each hypothesis.
+Existing wording, familiarity, and passing a whole-rule test do not justify every
+phrase.
 
-Create no manifests, audits, reports, staging files, temporary AGENTS files, or session-state files. Keep the candidate inventory, rubrics, test plan, outputs, and decisions in the working context.
+Pursue concise instructions that cause useful behavior, load at the right scope,
+and state observable conditions and actions. Preserve required outcomes and
+permission boundaries; scrutiny alone does not authorize their removal.
 
-## 1. Resolve scope and back up sources
+Read [$simplified-technical-english](../simplified-technical-english/SKILL.md)
+and use it for instruction prose. Preserve quotations, code, identifiers, and
+commands exactly. Text intended for non-instruction use keeps its appropriate
+writing mode; do not impose instruction style on it.
 
-Perform these mechanical steps in the main agent:
+## Choose scope
 
-1. Resolve the global file as `$CODEX_HOME/AGENTS.md`, falling back to `~/.codex/AGENTS.md` when `CODEX_HOME` is unset. Permit an explicitly supplied global path for an isolated fixture.
-2. Resolve the project root with Git when the working directory belongs to a repository. Include `<project-root>/AGENTS.md` only when it exists. Outside Git, include `AGENTS.md` in the explicit project directory when present. Do not discover nested or unrelated AGENTS files.
-3. Generate one local-time timestamp in `YYYY-MM-DD_HH-MM-SS` form.
-4. Copy each applicable source beside itself as `AGENTS_backup_<timestamp>.md`. Use the same timestamp for global and project files. Refuse to overwrite an existing backup.
-5. Read any existing scope-matched `AGENTS.excluded.md` into working context and remember whether it existed so failure recovery can restore it without another backup file.
+- **Full AGENTS optimization:** For a standalone request, optimize text physically
+  present in the selected global and project AGENTS files. Use all steps below.
+- **Proposed changes:** When `$agent-instructions` authors or changes AGENTS or
+  any skill instruction text, optimize only its proposed additions and edits.
+  A new file's instruction text is all proposed text. Use steps 2--5 on that
+  delta and return the revised proposal to the authoring workflow. Do not run
+  whole-file discovery, create AGENTS backups or exclusions, or replace active
+  files through this mode.
 
-Backups are immutable recovery sources. Copy them; do not rename the active files.
+In Proposed changes mode, read the baseline, diff, and whole affected instruction
+system. If an unchanged part must change with the proposal to preserve coherence,
+include that necessary companion edit before optimization. Keep unrelated text
+and user edits intact; do not optimize the whole file by default.
+Account for each proposed phrase and preserve required outcomes.
+Compare the baseline with the proposal in fixtures only when behavior needs
+testing. Return the revised diff, decisions, and verification limits; the
+authoring workflow owns application and final checks. Do not claim required
+optimization completed if a conflicting or untested required outcome remains.
 
-## 2. Separate candidates from operational material
+Treat imports and arbitrary referenced content as opaque. Review pointer wording
+without expanding the editing scope. Enabled capability metadata inspected
+below is routing evidence, not another editing target.
 
-Classify coherent instruction blocks in memory.
+Keep the inventory, rubrics, plan, and decisions in working context. Create no
+permanent manifests, audit reports, staging files, or session-state files.
+Temporary test fixtures and execution evidence are permitted outside the target
+repository; they must not alter the user's active instruction or role files.
 
-Optimization candidates include agent-behavior steering such as reasoning posture, autonomy, communication, delegation judgment, coding judgment, formatting preferences, and general engineering behavior.
+## 1. Resolve scope and preserve recovery
 
-Non-candidates include environment facts, machine paths, browser and documentation routing, API-key placement, tool or skill instructions, shell commands, package-manager commands, project architecture, repository workflows, and `@` import lines. Preserve non-candidates in their current scope and do not test them.
+Perform these steps in the main agent:
 
-Apply scope by meaning, not origin:
+1. Resolve the active Codex home from `CODEX_HOME`, otherwise `~/.codex`. Select
+   its effective global file, including `AGENTS.override.md` precedence. Permit
+   an explicit global path for an isolated fixture.
+2. Resolve the project root with Git, or use the explicit project directory
+   outside Git. Select its effective root AGENTS file when present. Do not
+   discover nested or unrelated AGENTS files.
+3. Generate one local timestamp in `YYYY-MM-DD_HH-MM-SS` form. Copy each selected
+   source beside itself as `AGENTS_backup_<timestamp>.md`. Refuse to overwrite
+   an existing backup. Keep the source paths and initial bytes for comparison.
+4. Retain the exact bytes of each existing scope-matched `AGENTS.excluded.md`
+   in working context, or record that it did not exist.
 
-- Move generally applicable behavioral preferences found in the project file into the global candidate set.
-- Keep project-specific behavioral constraints and all project mechanics in the project set.
-- Avoid duplicating a global rule in the project file.
-- Treat headings and source placement as weak evidence. Reorganize by semantic scope and behavior rather than preserving arbitrary provenance-based sections.
+Keep backups immutable. Leave active files intact until test decisions and
+validation are complete. Run instruction variants in isolated fixtures.
 
-Rewrite the active AGENTS files into a baseline state that contains all non-candidates but none of the optimization candidates. Do not create an intermediate file. Newly spawned agents must therefore inherit default model behavior plus operational instructions unrelated to the behavior being tested.
+## 2. Scrutinize every part
 
-## 3. Plan minimal behavioral test batches
+Account for every section, instruction, sentence, clause, and meaningful phrase.
+No category is exempt: include operational instructions, commands, environment
+facts, formatting, delegation, and context pointers. Preserve identifiers,
+command syntax, and factual values exactly when their content remains needed.
 
-Split the candidate pool into behaviorally distinct instructions, then pack compatible candidates into as few paired tests as possible. Batch candidates when one realistic scenario can create a distinct opportunity to observe each behavior without the instructions interacting, masking one another, or making attribution ambiguous. Keep conflicting, tightly correlated, or scenario-incompatible candidates in separate batches.
+For each part, establish its required outcome and the smallest wording that can
+cause it. Ask what changes if the part is removed and what it displaces or delays.
+Choose its owner: AGENTS, a skill, configuration, or executable enforcement.
+Do not move content to an unauthorized surface; report that limit.
 
-Before sampling outputs, define for every candidate in a batch:
+Inspect the currently enabled skill names, descriptions, and invocation policy,
+plus the available role names and descriptions. A cached package is not proof
+of enablement. Read additional skill routing instructions only when needed to
+establish a specific conflict; do not execute that workflow. Identify concrete
+overlap, competing triggers, and missing conditions. Do not invent a conflict
+merely because wording is abstract.
 
-- The part of the shared scenario that creates a genuine opportunity to follow or violate the instruction.
-- The intended observable behavior.
-- An independent scoring criterion that distinguishes a material improvement from stylistic noise.
+Assume implied delegation will not happen. A role name, description, or sentence
+about delegation does not establish activation. Identify the task condition,
+expected role, work boundary, and action when delegation is unavailable or
+inappropriate. Test actual selection when that uncertainty affects a decision.
 
-Do not plan mini-tests for non-candidates. Never execute or simulate custom tools, commands, scripts, integrations, skills, OpenSpec workflows, RTK behavior, or unknown side effects.
+Choose deletion, compression, a concrete rewrite, consolidation, or relocation
+within scope. Replace harmful wording instead of adding a counterweight. Convert
+vague judgment into a condition, action, and fallback when reliable execution
+requires them. Do not replace useful judgment with an exhaustive checklist.
 
-## 4. Run clean-context paired tests
+## 3. Plan the fewest useful shots
 
-For each batch, use new subagents that do not inherit the main conversation:
+Before any AI run, define the decision each comparison will resolve. For each
+tested part, specify a realistic opportunity, expected observable behavior,
+contrary evidence, and an independent pass criterion. Use deterministic checks
+for syntax and facts. Behavioral tests must resolve wording uncertainty, not
+restate instructions or preserve exact prose in permanent tests.
 
-1. Spawn a baseline agent with `fork_turns="none"`. Give it only the shared scenario. Forbid tools, file reads, file writes, and discussion of the test setup. Require output only.
-2. Spawn a steered agent with `fork_turns="none"`. Give it the identical scenario plus only the candidates in that batch. Apply the same output-only restrictions.
-3. Spawn a fresh evaluator with `fork_turns="none"`. Provide the predefined per-candidate rubrics and anonymized outputs in randomized order. Do not reveal which output was steered. Require a separate judgment for each candidate about material behavioral differences and intended effect.
+Pack compatible opportunities into one scenario plan per shot group; use one
+group when possible. Give each behavior a distinct observable result. Separate
+mutually exclusive cases or cases that cue, mask, or change another result.
+Plan normal and boundary opportunities together when they remain independent.
+Keep rubrics, expected role names, and the comparison purpose out of executor
+prompts. Do not tell an executor to activate the behavior being measured.
 
-Do not reuse test or evaluator agents across batches or follow-up pairs. Sequence agents as needed to respect concurrency limits.
+Compare identical scenarios in fresh contexts. Test usefulness with and without
+the candidate. Test compression against the original wording. For phrase-level
+questions, remove or replace that phrase while holding the rest constant. A
+whole-rule improvement does not establish that each surviving clause is needed.
+When behavioral tests are needed, compare the original and final proposed
+instruction system to detect interactions that isolated comparisons missed.
+Reuse a valid paired result when it already covers that final state.
 
-Use these decision rules:
+Start every executor, mock worker, and AI evaluator with the least costly
+available model and its lowest supported effort. Set both explicitly; do not
+inherit production role settings. `gpt-6-luna` at `low` is the local starting
+point when available. Escalate only when a recorded limitation of the cheaper
+run prevents the decision, and keep comparison arms at equivalent settings.
+Record unavailable cost or runtime measurements as unknown.
 
-- Retain a candidate when its independently scored signal shows a material change in the intended direction.
-- When a candidate's signal is ambiguous, isolate only that candidate in a sharper follow-up pair.
-- When the first pair shows no material difference for a candidate, run a second sharper scenario before declaring that instruction redundant; combine multiple no-signal candidates again only when attribution will remain clean.
-- When steering changes behavior in the wrong direction, rewrite the instruction and retest it from fresh contexts.
-- Retest any rewrite that changes semantics. Purely editorial compression may reuse the existing result.
-- Never activate an instruction that fails to produce its intended effect reliably. Exclude it with the applicable reason.
+Read [references/behavioral-tests.md](references/behavioral-tests.md) before
+preparing fixtures or executing tests. Apply the host's AI permission rules;
+optimization is not standing permission for model tests. Batch authorized AI
+checks at the end of the root turn, after independent work is complete.
 
-## 5. Rebuild the active files
+## 4. Run bounded comparisons
 
-Reconstruct both active files directly from the backups, the preserved non-candidates, and the test decisions.
+Use isolated `codex exec` runs for normal cases. Use an interactive Codex CLI
+when the tested behavior requires an interactive tool such as
+`request_user_input`; an exec error does not test successful question handling.
+Give each run a compact plan that exercises all compatible opportunities
+indirectly. Use fixture-only tools when actions are necessary, and output-only
+restrictions for cases that do not need tools. Do not run real integrations,
+custom commands, skill workflows, or project work as test side effects.
 
-For the global file:
+For delegation cases, replace role instructions in the test directory's
+`.codex/agents/` and register those files in its `.codex/config.toml`. Preserve
+real role names and descriptions. Each replacement must acknowledge activation,
+return a fixed mock result, and stop without tools, edits, or descendants. Do
+not instrument or temporarily edit the user's production profiles.
 
-- Consolidate overlapping general steering into a coherent section hierarchy.
-- Organize by behavior rather than original file, source section, or provenance.
-- Use imperative language, one behavior per bullet, clear scope, minimal headings, and shallow Markdown structure.
-- Remove duplicated rationale, vague intensifiers, motivational prose, and unnecessary examples.
-- Keep global environment and operational material outside CORE under descriptive sections.
+Verify fixture discovery and effective overrides before sampling. Collect
+actual tool events and mock returns. Missing expected activation is a failed
+selection. An executor's claim that it delegated is not evidence. Mock receipts
+establish routing only; they do not establish production worker competence.
 
-For the project file:
+Score each part against its predefined criterion. Use mechanical evidence when
+it decides the result. When judgment needs an AI evaluator, use one fresh
+context for compatible results with anonymized, randomized comparison arms.
+Provide the rubrics and evidence, but no implementer verdict or arm labels.
 
-- Keep project architecture, commands, dependencies, tools, workflows, and project-specific behavior.
-- Remove guidance promoted to the global file.
-- Preserve useful non-candidates without testing or optimizing them.
+## 5. Decide and rebuild
 
-Preserve semantic force unless a tested rewrite intentionally changes it. Do not silently omit material that was not an optimization candidate.
+- Keep wording only when its useful effect, necessary fact, or required outcome
+  justifies its attention cost. Use the shortest successful form.
+- If a comparison shows no useful difference, use a sharper independent
+  opportunity before declaring the part redundant. Batch unresolved parts when
+  attribution stays clear; reuse already-planned boundary cases when suitable.
+- If wording degrades behavior, rewrite or exclude it. Retest semantic rewrites.
+- If a result is ambiguous, isolate only that uncertainty. Do not keep broad
+  wording because one clause helped, or delete necessary behavior because a
+  spot test could not observe it.
+- If required behavior still fails, fix its trigger or ownership within scope.
+  Report a blocked surface change or untested requirement instead of claiming
+  optimization succeeded.
 
-## 6. Record excluded steering
+For Full AGENTS optimization, rebuild from backups and decisions. Organize by
+behavior and scope, not provenance. Put general preferences globally and
+project-specific behavior in the project file. For Proposed changes, revise
+only the supplied delta within its authorized surfaces. Remove duplication and
+padding. Keep needed mechanics where they apply; review each phrase as above.
+Preserve conditions, exceptions, quantities, and requirement levels unless an
+authorized, tested decision changes them.
 
-Use a scope-matched exclusion file only when that scope has excluded candidates:
+Verify complete in-scope accounting, required outcomes, routing, and any required
+combined comparison. In Proposed changes mode, check that the revised proposal
+includes necessary companion edits and leaves unrelated text unchanged, then
+return it. In Full AGENTS optimization,
+check that each active file still matches its initial bytes before replacement.
+If another writer changed it, reconcile that change before replacement.
 
-- Global: beside the global file as `AGENTS.excluded.md`.
-- Project: beside the project file as `AGENTS.excluded.md`.
+## 6. Record exclusions and complete
 
-Append exactly one invocation block per affected scope:
+When a scope has excluded text, append one block to its `AGENTS.excluded.md`:
 
 ```markdown
-# <YYYY-MM-DD_HH-MM-SS> excluded by optimization-agent-instructions
+# <YYYY-MM-DD_HH-MM-SS> excluded by $optimize-agent-instructions
 
-## <candidate label>
+## <instruction or phrase label>
 
-<original instruction text>
+<exact original excluded text>
 
-Reason: <one concise sentence describing redundant default behavior or failed steering>
+Reason: <concise evidence-based reason>
 ```
 
-Place every exclusion for the invocation beneath that single level-one heading. Preserve the original instruction text. Do not overwrite older blocks. Do not create or modify an exclusion file when the scope has no exclusions.
+Use the invocation timestamp. Keep all exclusions beneath that one heading for
+the scope. Preserve earlier blocks and record exact excluded fragments rather
+than marking an entire retained instruction excluded. Do not create or modify
+an exclusion file when that scope has no exclusions.
 
-## 7. Recover on failure and report completion
+Verify non-empty active files, source accounting, correct scope, no unnecessary
+duplication, successful retained steering, and correct exclusion records.
+Remove temporary fixtures after collecting results; retain execution evidence
+only when needed to explain a result. Create no separate report artifact.
 
-If the workflow is interrupted, cancelled, or cannot finish in the current turn:
+On interruption or failure, restore only this invocation's writes from the
+immutable AGENTS backups and retained exclusion bytes. Delete newly created
+exclusion files. If a concurrent edit prevents safe restoration, preserve it
+and report the recovery source. Leave the timestamped AGENTS backups in place.
 
-1. Copy every timestamped backup over its active AGENTS file.
-2. Restore each pre-existing exclusion file from the content retained in working context, or delete a newly created exclusion file.
-3. Leave the timestamped AGENTS backups in place.
-
-On success, verify:
-
-- The global and applicable project AGENTS files are non-empty.
-- The files contain no duplicated or provenance-only section splits that the semantic reorganization should have consolidated.
-- Non-candidates remain in their proper scope.
-- Retained steering matches successful tests.
-- Exclusion blocks use the invocation timestamp and correct scope.
-- No manifest, audit, report, temporary AGENTS, or session-state file was created.
-
-Report only the active files, backup files, exclusion files actually changed, the number of candidates retained or excluded, and any validation limitation. Do not create a separate report artifact.
+Report changed active, backup, and exclusion paths; counts retained and excluded;
+test groups and actual model/effort; expected and observed activations; and
+validation limits. A spot test supports only its exercised opportunities.

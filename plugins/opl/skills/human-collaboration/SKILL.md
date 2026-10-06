@@ -1,6 +1,6 @@
 ---
 name: human-collaboration
-description: Involve the human in consequential parallel work through a durable prioritized inbox. Use for architectural, pattern, algorithmic or strategic review, grounded experiments, human-initiated contributions, and recovery or disposition of submitted feedback. Keep ordinary approvals and rule exceptions on their required channels.
+description: Open the shared human inbox for this chat and collaborate through technical reviews, optional questions, and submitted feedback.
 ---
 
 # Human collaboration
@@ -19,16 +19,45 @@ the helper into the project. All global options precede the command:
 <python> -B -X utf8 <skill>/scripts/human.py --workspace <project> --thread <root-id> <command>
 ```
 
-Use the known root thread ID or `CODEX_THREAD_ID`; never guess it. `init` creates
-`.human/` and binds that root. It does not start a server or contact Codex. If an
-inbox exists, use `pending` and `list` before creating more work. Inspect only the
-relevant full items with `show H006`. Recheck pending input after startup,
-resumption or compaction, before related commitments, and before completion.
+Use the known root thread ID or `CODEX_THREAD_ID`; never guess it. If an inbox
+exists, read `INBOX.md` and use `pending` and `list` before creating more work.
+Inspect only the relevant full items with `show H006`.
 
-One root owns intake and disposition. Workers propose contributions to their
-parent; they do not publish assignments or start their own inboxes. A different
-root must inspect the current owner and use `bind --reason` for an explicit
-handoff. Binding never resets claims or replays implementation effects.
+When the user explicitly invokes `$opl:human-collaboration`, the interactive
+root opens the inbox before preparing contributions:
+
+1. Run `init --title <readable-title>` for this root. It creates or reuses the
+   project inbox, enrolls the session, and registers the project in the local
+   catalog. Preserve reviewed revisions, claims, and outcomes. Do not enroll
+   other chats or projects, or transfer another root's work.
+2. Run `connect --host lan --allow-lan` to start or reuse the background service
+   on the host's detected private LAN IPv4 address. Honor a user-requested bind;
+   use `connect --host 127.0.0.1` for local-only access. Read
+   Delivery and phone access below for network and notification options.
+3. After authenticated readiness succeeds, open the returned pairing URL in the
+   host browser. Report the host's `lan_ip` and render `lan_url` as a clickable
+   Markdown link, such as `[Open human inbox](<returned-url>)`. For `local-only`
+   access, link `url` and state that a phone cannot reach this listener. Report
+   that the service remains running after the turn and keep its bearer token
+   private. If connection fails, report the error and evidence
+   path; enrollment remains saved. Reconcile a possibly running process before
+   retrying startup.
+
+Hook-directed recovery starts by inspecting existing work. Recheck
+pending input after startup, resumption or compaction, before related commitments,
+and before completion. These checks do not enroll a session or start a server.
+Do not run `init`, `connect`, or `serve` because a hook requests recovery or during
+ordinary chat activity. If the current root is not enrolled, continue independent
+work and tell the user to invoke this skill before publishing contributions.
+Workers route enrollment requests and contribution proposals to their parent.
+
+Each contribution belongs to one root session. Independent roots can register
+in the same workspace; registration does not take another root's work. Workers
+propose contributions to their parent; they do not register independent roots.
+`pending` with `--thread` returns that root's unresolved responses. A different
+root must already be enrolled, inspect ownership, and use
+`bind --from-thread <old-root> --reason` for an explicit handoff. Binding does
+not enroll the receiving root, reset claims, or replay effects.
 
 ## Select and prepare
 
@@ -89,6 +118,28 @@ retain older versions. Do not silently retarget input to newer source.
 
 ## Respond and integrate
 
+Use optional `questions` in a published spec when specific answers will help.
+Each question has a stable ID, a prompt, and three choices. Put the highest-value
+recommendation first. The reader also offers a free-text answer. One brief can
+contain several questions after its Markdown context. Keep architecture reviews
+and other open invitations free-form when choices would distort the work.
+
+Architecture review invitations are nonblocking. Continue authorized work while
+the human is absent. For a nonblocking question, if no independent work remains,
+the root can start the first recommended choice as an explicit assumption.
+Before acting, use `assume H006 --question <question-id> --reason <reason>`.
+State why no independent work remains and why the next step is within scope and
+reversible. The question becomes `answer_assumed`; it remains visible and the
+human can correct it. Preserve the assumption and recovery point in the existing
+task checkpoint. A human correction requires reassessing dependent work.
+
+Do not assume approval, a rule exception, a destructive action, or a decision
+whose consequential ambiguity requires input. Use the host's inline
+`request_user_input` for legitimate blockers and consequential ambiguity when
+the host permits it, at the required time. Otherwise use the required chat
+channel. The inbox cannot replace that channel. Do not wait for a review
+invitation or manufacture more work after the authorized task is complete.
+
 Saving a file or phone draft is not submission. The human explicitly uses Send
 or `submit H006` for the Markdown reply. `submit --revision` targets an older
 brief. The helper stores actual filesystem nanosecond modification stamps after
@@ -127,20 +178,40 @@ need an agent's invitation to question the architecture.
 
 ## Delivery and phone access
 
-The session hooks report outstanding submissions only to the bound root. They
+The session hooks report outstanding submissions only to their owning root. They
 are inactive without a project inbox, do not initialize one, do not invoke a
 model, and never block Stop. `PostToolUse` deduplicates notices; startup/resume,
 new user turns and Stop re-surface unresolved work. Notifications are not claims.
 
-`serve` runs a foreground local web service on `127.0.0.1:8766` by default. Report
-its pairing link only after it starts. The link contains a bearer token; keep it
-private. To reach it from a phone, explicitly choose the device's LAN/VPN bind
-address and `--allow-lan`. Do not change firewalls, expose public HTTP, install a
+Enrollment persists. Invoke `$opl:human-collaboration` again to enroll a different
+root or restart a stopped service. The service stays running when the agent turn
+ends. Add `--wake-root` to `connect` only when queue notifications are requested.
+`serve` still runs a foreground service for an individual workspace;
+`serve --catalog <runtime-directory>` serves registered workspaces. The default is `127.0.0.1:8766`.
+Report the pairing link only after the service responds. It contains a bearer token; keep it
+private. `--host lan --allow-lan` selects an active physical Windows adapter,
+preferring one with a gateway and then the lowest interface metric. On POSIX it
+uses the default route's private IPv4 address. Discovery failure is an explicit
+error; choose a literal bind address instead. Phone reachability depends on the
+network and firewall; successful host readiness does not prove it. For a
+specific LAN/VPN address, use that literal IP and `--allow-lan`. Do not change firewalls, expose public HTTP, install a
 service, or change global Codex configuration merely to make this work.
 HTTP is not encrypted; use a trusted local network or private VPN. This is a
-single-user workspace service, not an Internet-facing multi-user application.
+single-user local service, not an Internet-facing multi-user application.
 
-`serve --wake-root` or `submit --notify` requests one `codex queue` notification
+The browser starts with a newest-first combined message feed. It can filter to
+one session. Lists show available projects and sessions that have contributions,
+including completed ones. Unavailable projects and empty sessions are omitted;
+their stored history is retained. The session list puts sessions needing human input first, then
+sessions awaiting agent outcomes, then sessions with neither. Counts distinguish
+`need you`, `with agent`, assumed answers, and deferred work. The browser refreshes every three
+seconds while visible and when it regains focus. Background refresh preserves
+the open composer. These HTTP reads do not notify or invoke agents.
+Human-initiated contributions must select a recipient when several sessions are
+registered. Item requests include the workspace ID so identical H-numbers in
+different projects cannot route a response to the wrong project.
+
+`connect --wake-root`, `serve --wake-root`, or `submit --notify` requests one `codex queue` notification
 using OPL's existing executable resolver. The receipt distinguishes attempting,
 accepted, failed, and unknown. Acceptance does not prove delivery or integration.
 The message carries identifiers and a path, not the reply text. On timeout,

@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 38 -->
+<!-- opl-instructions-version: 40 -->
 
 # Core Behavior
 
@@ -120,6 +120,26 @@ Apply Human Comprehensibility to code, comments, technical explanations, and rev
 
 When a change is requested, verify that the request is consistent with the intended design and does not introduce a known defect or anti-pattern. If the request is inconsistent, propose a better alternative and explain the tradeoffs.
 
+## Slop Slayer: coherent design over accumulated patches
+
+When repeated fixes expose scattered responsibility or compensating machinery,
+reassess the connected design before adding another patch. Trace the intended
+behavior through its consumers. Correct the faulty premise where it is owned;
+use historical failures to identify the underlying pattern, not a catalogue of
+symptoms to special-case. Redesign or rearchitect when that gives a clearer,
+more maintainable result within the authorized scope.
+
+Apply DRY to duplicated knowledge and rules, not merely similar-looking code.
+Prefer explicit responsibilities and a simple flow over abstractions that hide
+different behavior. Apply YAGNI to speculative machinery; preserve structures
+that give clear shape or support to established future requirements. Identify
+the requirement they serve instead of treating current inactivity as waste.
+
+Judge simplification by the knowledge needed to understand and change behavior,
+the number of competing sources of truth, and the maintenance burden. Fewer
+lines or files alone do not establish improvement. Preserve intended capability
+and meaningful verification while removing unnecessary complexity.
+
 ## Change Discipline
 
 For stale or explicitly removed material, perform deletion-only cleanup of orphaned artifacts, and refactor still-used artifacts to remove dependencies on the deleted material. Do not add absence tests, recurrence guards, or prose mentions of deleted material without explicit instruction to do so.
@@ -228,11 +248,17 @@ true blocker, still finish every independent task first, then ask it at the end
 of the turn and stop until the answer arrives. This timing rule does not bypass
 the conflict procedure.
 
-Non-root agents never invoke `request_user_input`. When messaging is available,
-send a blocking question, 2--3 mutually exclusive options, and a recommendation
-to the immediate parent agent. If messaging is unavailable, finish all safe
-independent work and return a clearly marked BLOCKED report with the question,
-options, recommendation, and evidence. Withhold the blocked action. On
+Non-root agents never invoke `request_user_input`. When an assignment needs a
+parent decision, or a parent receives that question, read
+`$opl:route-agent-question`. Send the question to the recorded immediate parent.
+Parents answer from evidence within their authority or relay upward; return the
+decision along the same path. Service internal questions promptly; the timing
+rule above applies only to questions for the human. Withhold dependent actions
+until a valid answer arrives. If the procedure or transport is unavailable, finish
+safe independent work and return a clearly marked BLOCKED checkpoint with the
+question, 2--3 mutually exclusive options, recommendation, and evidence. A checkpoint
+is not successful completion; exclude it from waits that would prevent asking the
+human. On
 `request_user_input can only be used by the root thread`, do not retry or invoke
 `$opl:recover-request-user-input`; use this same parent-escalation route.
 

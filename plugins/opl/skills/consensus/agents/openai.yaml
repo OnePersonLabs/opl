@@ -1,0 +1,7 @@
+interface:
+  display_name: "Consensus"
+  short_description: "Bounded perspectives, evidence and a judge"
+  default_prompt: "Use $consensus to examine my question with distinct perspectives and an evidence-based judge."
+
+policy:
+  allow_implicit_invocation: false

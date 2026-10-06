@@ -1,6 +1,6 @@
 interface:
   display_name: "Human collaboration"
-  short_description: "Durable technical review and human contributions"
-  default_prompt: "Use $opl:human-collaboration to prepare, prioritize, and integrate meaningful human contributions without blocking independent work."
+  short_description: "Open the shared inbox and collaborate with the human"
+  default_prompt: "Use $opl:human-collaboration to enroll this chat, open the shared inbox, and prepare and integrate meaningful contributions without blocking independent work."
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

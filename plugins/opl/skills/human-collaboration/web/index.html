@@ -10,7 +10,7 @@
 </head>
 <body>
   <header class="topbar">
-    <div><strong>Human inbox</strong><span id="workspace">OPL</span></div>
+    <div><strong>Human inbox</strong><span id="workspace">OPL</span><span id="live-status" role="status">Connecting…</span></div>
     <button id="refresh" type="button">Refresh</button>
   </header>
   <div id="notice" role="status" aria-live="polite"></div>
@@ -21,6 +21,10 @@
   </section>
   <main id="app" hidden>
     <section id="queue" aria-label="Contribution inbox">
+      <section class="session-picker" aria-label="Session filter">
+        <h2>Sessions</h2>
+        <div id="sessions"></div>
+      </section>
       <nav aria-label="Inbox views" id="tabs"></nav>
       <div class="queue-heading"><h1 id="view-title">Needs you</h1><p id="view-help">Prepared work where your input can make a difference.</p></div>
       <button id="contribute" type="button">Start a contribution</button>

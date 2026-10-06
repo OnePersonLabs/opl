@@ -6,3 +6,5 @@
 /.borg/
 *Zone.Identifier
 __azurite_db_blob_*
+.playwright-cli/
+.codex-remote-attachments/

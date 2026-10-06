@@ -93,6 +93,88 @@ a {
   padding:26px 22px 40px 28px;
   border-right:1px solid var(--border);
 }
+.session-picker {
+  margin-bottom:24px;
+}
+.session-picker h2 {
+  margin:0 0 10px;
+  font-size:16px;
+}
+#sessions {
+  display:grid;
+  gap:7px;
+  max-height:340px;
+  overflow:auto;
+}
+.session-option {
+  text-align:left;
+  min-width:0;
+  width:100%;
+}
+.session-option[aria-pressed=true] {
+  border-color:var(--accent);
+}
+.session-option strong,.session-option span {
+  display:block;
+  overflow-wrap:anywhere;
+}
+.session-status,.session-context,.session-label {
+  font-size:12px;
+  color:var(--muted);
+  font-weight:400;
+}
+.session-status.pending {
+  color:var(--accent);
+  font-weight:650;
+}
+.session-context {
+  margin-top:3px;
+}
+.session-label {
+  margin-bottom:5px;
+}
+.message-time {
+  display:block;
+  margin:0 0 8px;
+  color:var(--muted);
+  font-size:12px;
+}
+.message-preview {
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+.questions {
+  margin-top:30px;
+}
+.question {
+  margin:20px 0;
+  padding:16px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  min-width:0;
+}
+.question legend {
+  font-weight:650;
+  padding:0 6px;
+}
+.question-choice {
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  min-height:44px;
+  padding:8px 0;
+  font-weight:400;
+}
+.question-choice input {
+  width:20px;
+  height:20px;
+  flex-shrink:0;
+  margin:2px 0 0;
+  accent-color:var(--accent);
+}
+.question-text {
+  min-height:80px;
+}
 nav {
   display:flex;
   gap:5px;

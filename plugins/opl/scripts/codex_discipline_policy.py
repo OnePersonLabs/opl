@@ -44,7 +44,8 @@ TRIVIALIZING_DEFER = re.compile(
     r'(later|eventually|down the (road|line)|another (time|session)|some other time'
     r'|circle back|when i (get|come) (around|to|back))', re.I,
 )
-FOLLOWUP = re.compile(r'follow-up|follow up|pending |blocked on|awaiting |should\s+file|future work', re.I)
+FOLLOWUP = re.compile(r'follow-up|follow up|should\s+file|future work', re.I)
+WAITING = re.compile(r'pending |blocked on|awaiting ', re.I)
 LEAVING_WORK_UNRESOLVED = re.compile(
     r'\b(?:leave|leaving|left)\s+(?:it|that|them|those|these)\s+alone\b'
     r'|\b(?:leave|leaving|left)\b[^.!?\n]{0,100}'
@@ -187,7 +188,7 @@ class DisciplinePolicy:
         return any(entry in content.lower() and (not needle or needle.lower() in entry)
                    for entry in self.exceptions)
 
-    def scan(self, text, prefix=''):
+    def scan(self, text, prefix='', *, clarification_waits=()):
         mvp_hits, deferral_hits = [], []
         lines = list(enumerate(text.splitlines(), 1))
         for line, content in lines:
@@ -209,10 +210,14 @@ class DisciplinePolicy:
             (TRIVIALIZING_DEFER, '', 'trivializing-defer', True),
             (PLACEHOLDER, '', 'TODO/FIXME placeholder', False),
             (FOLLOWUP, '', 'follow-up placeholder', False),
+            (WAITING, '', 'untracked waiting', False),
             (LEAVING_WORK_UNRESOLVED, '', 'leaving work unresolved', True),
         ):
             for line, content in lines:
-                if pattern.search(content) and not (exceptions and self.is_excepted(content, needle)):
+                matches = pattern.finditer(content)
+                if pattern is WAITING:
+                    matches = (match for match in matches if (line, match.start()) not in clarification_waits)
+                if any(matches) and not (exceptions and self.is_excepted(content, needle)):
                     append(line, content, phrase)
         return mvp_hits, deferral_hits
 
@@ -259,6 +264,10 @@ def last_assistant_text(transcript, tail_lines=200):
             continue
         if not isinstance(record, dict):
             continue
+        if record.get('type') == 'response_item':
+            record = record.get('payload')
+            if not isinstance(record, dict) or record.get('type') != 'message':
+                continue
         message = record.get('message') or record
         if not isinstance(message, dict) or message.get('role') != 'assistant':
             continue
@@ -267,6 +276,7 @@ def last_assistant_text(transcript, tail_lines=200):
             return content
         if isinstance(content, list):
             return '\n'.join(item.get('text', '') for item in content
-                             if isinstance(item, dict) and item.get('type') == 'text' and isinstance(item.get('text', ''), str))
+                             if isinstance(item, dict) and item.get('type') in ('text', 'output_text')
+                             and isinstance(item.get('text', ''), str))
         return ''
     return ''

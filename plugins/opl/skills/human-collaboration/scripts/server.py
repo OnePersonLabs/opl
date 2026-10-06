@@ -15,6 +15,7 @@ import sys
 from urllib.parse import parse_qs, urlsplit
 
 from inbox import Conflict, Inbox, InboxError, MAX_TEXT, label, now, text
+from catalog import Catalog
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
@@ -22,17 +23,20 @@ STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
           "/style.css": ("style.css", "text/css; charset=utf-8")}
 
 
-def notify(inbox: Inbox, submission: str, *, retry: bool = False) -> dict:
+def notify(inbox: Inbox, submission: str, *, retry: bool = False, thread: str | None = None) -> dict:
     """At-most-one automatic attempt. Acceptance is not delivery or integration."""
     with inbox.transaction() as db:
         row = db.execute("SELECT * FROM submissions WHERE id=?", (submission,)).fetchone()
         if not row:
             raise InboxError("unknown submission")
         receipt = dict(row)
+        item = inbox._item(db, receipt["item"])
+        if thread is not None:
+            inbox.owner(db, thread, item)
         previous = json.loads(receipt["queue"])
         if receipt["state"] == "resolved" or (previous["state"] != "not_requested" and not retry):
             return previous
-        thread = inbox._meta(db, "thread")
+        thread = item["owner_thread"]
         attempt = {"state": "attempting", "at": now(), "thread": thread}
         db.execute("UPDATE submissions SET queue=? WHERE id=?", (json.dumps(attempt), submission))
     message = (f"Human contribution {label(receipt['item'])}/{submission} is saved in "
@@ -63,19 +67,27 @@ def notify(inbox: Inbox, submission: str, *, retry: bool = False) -> dict:
 
 class HumanServer(ThreadingHTTPServer):
     daemon_threads = True
-    allow_reuse_address = True
+    allow_reuse_address = os.name != "nt"
 
-    def __init__(self, inbox: Inbox, host: str, port: int, *, token: str | None = None, wake: bool = False):
+    def __init__(self, inbox: Inbox, host: str, port: int, *, token: str | None = None, wake: bool = False, catalog: Catalog | None = None):
         address = ipaddress.ip_address(host)
         if address.version == 6:
             self.address_family = socket.AF_INET6
         self.inbox = inbox
+        self.catalog = catalog or Catalog(inboxes=[inbox])
         self.token = token or secrets.token_urlsafe(32)
         if len(self.token) < 32:
             raise InboxError("authentication tokens must contain at least 32 characters")
         self.wake = wake
         self.notifier = ThreadPoolExecutor(max_workers=1, thread_name_prefix="human-inbox-wake")
         super().__init__((host, port), HumanHandler)
+
+    def server_bind(self) -> None:
+        if os.name == "nt":
+            # Windows SO_REUSEADDR can share an active listener's address.
+            # Exclusive ownership is a socket bind property, not a startup lock.
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        super().server_bind()
 
     def server_close(self) -> None:
         super().server_close()
@@ -102,10 +114,10 @@ class HumanHandler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
-        self.end_headers()
         try:
+            self.end_headers()
             self.wfile.write(body)
-        except (BrokenPipeError, ConnectionResetError):
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
             pass  # The committed submission remains durable after disconnection.
 
     def json(self, status: int, value: object) -> None:
@@ -142,16 +154,20 @@ class HumanHandler(BaseHTTPRequestHandler):
             self.authenticate()
             query = parse_qs(parsed.query)
             if parsed.path == "/api/inbox":
-                self.json(200, self.server.inbox.snapshot())
+                self.json(200, self.server.catalog.snapshot())
+            elif parsed.path == "/api/service":
+                self.json(200, {"catalog_id": self.server.catalog.id, "wake_root": self.server.wake})
             elif parsed.path == "/api/item":
                 item = query.get("id", [""])[0]
                 rev = int(query["revision"][0]) if "revision" in query else None
-                self.json(200, self.server.inbox.get(item, rev))
+                inbox = self.server.catalog.resolve(query.get("workspace", [None])[0])
+                self.json(200, inbox.get(item, rev))
             elif parsed.path == "/api/source":
                 item = query.get("id", [""])[0]
                 rev = int(query.get("revision", ["0"])[0])
                 index = int(query.get("index", ["-1"])[0])
-                content, mime = self.server.inbox.source(item, rev, index, live=query.get("live") == ["1"])
+                inbox = self.server.catalog.resolve(query.get("workspace", [None])[0])
+                content, mime = inbox.source(item, rev, index, live=query.get("live") == ["1"])
                 # SVG is only embedded as an image by the client. This response
                 # cannot execute scripts when navigated directly either (CSP).
                 self.respond(200, content, mime)
@@ -181,14 +197,19 @@ class HumanHandler(BaseHTTPRequestHandler):
             if not isinstance(data, dict):
                 raise InboxError("request must be an object")
             path = urlsplit(self.path).path
-            inbox = self.server.inbox
+            if path == "/api/contribute":
+                inbox, thread = self.server.catalog.resolve_session(data.get("session"))
+            else:
+                inbox = self.server.catalog.resolve(data.get("workspace"))
             if path == "/api/draft":
-                result = inbox.save_draft(data.get("id", ""), data.get("revision"), data.get("body"), data.get("expected"))
+                result = inbox.save_draft(data.get("id", ""), data.get("revision"), data.get("body"), data.get("expected"), data.get("answers"))
             elif path in {"/api/submit", "/api/contribute"}:
                 if path == "/api/contribute":
-                    result = inbox.contribute(data.get("title"), data.get("body"), data.get("request_id"))
+                    result = inbox.contribute(data.get("title"), data.get("body"), data.get("request_id"), thread)
                 else:
-                    result = inbox.submit(data.get("id", ""), data.get("revision"), data.get("body"), data.get("request_id"), kind=data.get("kind", "feedback"))
+                    result = inbox.submit(data.get("id", ""), data.get("revision"), data.get("body"), data.get("request_id"), kind=data.get("kind", "feedback"), answers=data.get("answers"))
+                item = inbox.get(result["item"])
+                result.update({key: item[key] for key in ("workspace_id", "session", "session_title")})
                 self.json(200, result)
                 if self.server.wake:
                     self.server.notifier.submit(notify, inbox, result["id"])
