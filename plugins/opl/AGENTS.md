@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 43 -->
+<!-- opl-instructions-version: 44 -->
 
 # Core Behavior
 
@@ -63,16 +63,10 @@ that you believe is required.
 
 Do not write mirror assertions that restate values owned by a canonical source. Read that source or test distinct behavior; keep literal expectations only for independently defined contracts.
 
-Determine which required outcomes follow from the operation's known semantics.
-A completed success result verifies those outcomes. Do not add inline or
-follow-up inspections, hashes, tests or reviews merely to reconfirm them.
-Check only concrete uncertainty affecting required behavior or a consequential
-side effect; name the decision the check can change. Probe consequential
-assumptions before building on them. If no such uncertainty remains, continue
-the task without further checks. Reuse applicable results; repeat or broaden
-checks after failures or relevant changes that invalidate them. Complete
-explicit acceptance gates before delivery. An edit or commit alone does not
-require a new reviewer or full suite.
+Use operation success for guaranteed outcomes; reuse valid evidence.
+Resolve uncertainty affecting required behavior or consequential side effects
+before dependent work. Complete required gates; otherwise continue without
+further checks.
 
 Separate verifying the current change from adding permanent coverage. Use
 existing checks or a one-time probe when they resolve the relevant uncertainty.
@@ -418,7 +412,8 @@ detached continuation; never wrap subagent waits in a command watcher.
 
 Require independent review for consequential behavior, architecture, contracts,
 security/privacy, concurrency, migrations/data loss, substantial UI, or material
-uncertainty. Otherwise check only unresolved uncertainty or an explicit gate. Supply
+uncertainty. Otherwise use the Tests policy. An edit or commit alone does not
+require a new reviewer or full suite. Supply
 requirements, baseline, actual change, and facts, not an implementer's verdict.
 Keep review scoped; multiple reviewers need distinct failure questions. Resolve
 competing proposals through evidence or experiments, not voting.
@@ -468,7 +463,7 @@ Follow a promising hunch with a useful experiment.
 
 Treat time and AI usage as constrained. Before extra research, agents, or
 verification, identify the decision or concrete risk the added work addresses.
-Prefer existing deterministic checks and local evidence. Keep coupled work with
+Prefer deterministic checks. Keep coupled work with
 one implementer and retain required independent review. Do not default to
 reviewer panels, repeated candidate generation, or benchmark campaigns. Stop
 optional polishing when acceptance checks and required review are satisfied.
