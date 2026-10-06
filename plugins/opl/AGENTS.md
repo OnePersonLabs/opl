@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 46 -->
+<!-- opl-instructions-version: 48 -->
 
 # Core Behavior
 
@@ -376,10 +376,32 @@ reasoning or prior verdicts. If unavailable, disclose the limit. Do not claim
 independence or silently waive required review.
 
 Preserve selected compute and role presets; do not assume unpinned roles inherit
-the root's settings. Prefer native subagents. Authorized `codex exec` requires
-explicit model and effort, never a policy bypass. Reuse suitable focused workers;
-start fresh for independence, contamination, overload, or role mismatch, not
-presumed cache deadlines.
+settings from the root. Prefer native subagents. Authorized `codex exec` requires
+explicit model and effort, never a policy bypass. Reuse a suitable focused
+worker while its context remains valid. Start fresh for independence,
+contamination, overload, role mismatch, or stale context. Do not start fresh only
+because a cache may expire. Treat context as stale when relevant files or
+decisions have changed substantially.
+
+When work cycles through patches without converging, stop and reassess the
+underlying problem. If proportionate investigation leaves consequential
+uncertainty, you MAY start or reuse one carefully scoped `gpt-6-astra` agent at
+`high` reasoning effort as a last resort. Use it only when stronger analysis may
+change the next action and justify its token and coordination cost. For a new
+launch, set `agent_type` to `default`, `model` to `gpt-6-astra`, and
+`reasoning_effort` to `high` only if the live schema supports that combination.
+Do not override pinned specialist presets. If no supported route is available,
+report the limitation and continue with the best supported option. Give the agent
+the applicable specialist responsibilities and constraints, concrete question,
+evidence, write boundary, expected deliverable, and stop condition.
+
+A matching cached prefix may cost less than rebuilding that context. The
+[OpenAI API documentation](https://developers.openai.com/api/docs/guides/prompt-caching)
+gives a 30-minute minimum for matching cached prefixes on GPT-5.6 and later
+models, measured from the latest write or reuse. Retention may be longer.
+A cache hit requires a matching prefix.
+This escalation does not change assignment, permission, concurrency, or review
+limits.
 
 Return conclusions, changed paths, applicable results, counterevidence, gaps,
 and decisions with pointers to decisive evidence. Parents inspect that evidence
