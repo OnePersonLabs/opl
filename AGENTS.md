@@ -14,6 +14,21 @@ an unstaged bump does not satisfy the check. Initial version adoption uses 1
 in an existing repository. The first standalone commit preserves the inherited
 revision 10.
 
+## After a local plugin refresh
+
+After a successful `$opl:refresh-local-plugins` refresh, run the OPL checks used
+at session startup. Check configuration and global instructions in each refreshed
+user-level Codex home. The user has approved the update question: apply required
+OPL agent TOML configuration and documented defaults with the installed
+`scripts/codex-config-check.py fix`, and update outdated global instructions with
+`$opl:update-instructions`. Do not ask for that approval again.
+
+Keep the safety checks and dated backups from the update helpers. Do not downgrade.
+If homes share an instruction file, update its resolved target once. After a
+global-instruction replacement, restore this user-requested post-refresh rule in
+the user-level file. Keep the rule in this repository's `AGENTS.md` and the
+user-level file; do not add it to `plugins/opl/AGENTS.md`.
+
 ## Tests
 
 Do not add tests for skill invocation. Do not add tests that consume AI tokens
