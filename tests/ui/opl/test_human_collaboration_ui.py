@@ -16,9 +16,10 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "plugins/opl/skills/human-collaboration/scripts"))
 from inbox import Inbox
 from server import HumanServer
+from service import connection_links
 
 try:
-    from playwright.sync_api import sync_playwright, expect
+    from playwright.sync_api import sync_playwright, expect, Error as PlaywrightError
 except ImportError:
     raise SystemExit("UI gate blocked: install the development-only Python Playwright package in the test environment.")
 
@@ -28,10 +29,26 @@ class HumanUiTests(unittest.TestCase):
     def setUpClass(cls):
         cls.playwright = sync_playwright().start()
         binary = os.environ.get("OPL_CHROMIUM_BIN") or shutil.which("chromium") or shutil.which("google-chrome")
-        if not binary:
+        options = {"headless": True, "args": ["--no-sandbox"]}
+        try:
+            if binary:
+                cls.browser = cls.playwright.chromium.launch(executable_path=binary, **options)
+                return
+            if os.name == "nt":
+                for channel in ("chrome", "msedge"):
+                    try:
+                        cls.browser = cls.playwright.chromium.launch(channel=channel, **options)
+                        return
+                    except PlaywrightError as error:
+                        if f"Chromium distribution '{channel}' is not found" not in str(error):
+                            raise
+            if Path(cls.playwright.chromium.executable_path).is_file():
+                cls.browser = cls.playwright.chromium.launch(**options)
+                return
+            raise RuntimeError("UI gate blocked: install Chrome/Edge on Windows, run python -m playwright install chromium, or set OPL_CHROMIUM_BIN to an installed Chromium executable")
+        except (PlaywrightError, RuntimeError):
             cls.playwright.stop()
-            raise RuntimeError("UI gate blocked: set OPL_CHROMIUM_BIN to an installed Chromium executable")
-        cls.browser = cls.playwright.chromium.launch(executable_path=binary, headless=True, args=["--no-sandbox"])
+            raise
 
     @classmethod
     def tearDownClass(cls):
@@ -54,7 +71,9 @@ class HumanUiTests(unittest.TestCase):
         self.errors = []
         self.page.on("pageerror", lambda error: self.errors.append(str(error)))
         self.page.on("console", lambda message: self.errors.append(message.text) if message.type == "error" else None)
-        self.url = f"http://127.0.0.1:{self.server.server_address[1]}/#token={self.server.token}"
+        self.url = connection_links("127.0.0.1", self.server.server_port, self.server.token, self.server.guid)["url"]
+        self.requests = []
+        self.page.on("request", lambda request: self.requests.append(request.url))
         self.page.goto(self.url)
         expect(self.page.get_by_role("button", name=self.item["title"], exact=True)).to_be_visible()
 
@@ -78,6 +97,12 @@ class HumanUiTests(unittest.TestCase):
         self.assertEqual(self.inbox.snapshot()["pending"], [])
         self.page.reload()
         expect(self.page.locator("#reply")).to_have_value("#6 is conflating evidence retention and inference budget.")
+        from urllib.parse import parse_qs, urlsplit
+        self.assertEqual(parse_qs(urlsplit(self.page.url).query)["guid"], [self.server.guid])
+        for url in self.requests:
+            parsed = urlsplit(url)
+            if parsed.scheme == "http":
+                self.assertEqual(parse_qs(parsed.query).get("guid"), [self.server.guid])
         self.page.get_by_role("button", name="Send", exact=True).click()
         expect(self.page.locator(".message.human")).to_contain_text("conflating")
         receipt = self.inbox.snapshot()["pending"][0]
@@ -94,7 +119,7 @@ class HumanUiTests(unittest.TestCase):
         self.page.get_by_role("combobox", name="Reply type").select_option("question")
         def commit_then_disconnect(route):
             route.fetch(); route.abort()
-        self.page.route("**/api/submit", commit_then_disconnect, times=1)
+        self.page.route("**/api/submit?*", commit_then_disconnect, times=1)
         self.page.get_by_role("button", name="Send", exact=True).click()
         expect(self.page.locator("#notice")).to_contain_text("retained for retry")
         self.page.reload()

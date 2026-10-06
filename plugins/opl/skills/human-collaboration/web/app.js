@@ -12,6 +12,7 @@ const button = (title, action, className = '') => {
   return node
 }
 let token = sessionStorage.getItem('opl-human-token') || ''
+const guid = new URLSearchParams(location.search).get('guid')
 const fragment = new URLSearchParams(location.hash.slice(1))
 if (fragment.has('token')) {
   token = fragment.get('token')
@@ -40,7 +41,9 @@ function requestId() {
   return Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('')
 }
 async function api(path, data, binary = false) {
-  const response = await fetch(path, {method: data ? 'POST' : 'GET',
+  const url = new URL(path, location.origin)
+  url.searchParams.set('guid', guid)
+  const response = await fetch(url, {method: data ? 'POST' : 'GET',
     headers: {Authorization: `Bearer ${token}`, ...(data ? {'Content-Type': 'application/json'} : {})},
     ...(data ? {body: JSON.stringify(data)} : {})})
   if (!response.ok) {
@@ -115,7 +118,7 @@ function itemUrl(path, item, extra = {}) {
   return `${path}?${new URLSearchParams({id: item.id, workspace: item.workspace_id, ...extra})}`
 }
 function locationFor(item) {
-  const query = new URLSearchParams()
+  const query = new URLSearchParams({guid})
   if (sessionFilter) query.set('session', sessionFilter)
   if (item) {
     query.set('workspace', item.workspace_id); query.set('item', item.id)

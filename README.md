@@ -18,9 +18,17 @@ Hooks require Python 3.11 or later. Research workflows require Python 3.12 or la
 
 ```sh
 npm ci
+python -m pip install playwright
 npm run verify
 npm run test:installed -- --plugin opl
 ```
+
+The pre-push hook runs the deterministic checks, including real-browser UI tests.
+Install Playwright in the Python environment used by the checks (`PYTHON_BIN`
+selects a different interpreter). The UI tests use an installed Chromium browser.
+To install Playwright's development browser, run `python -m playwright install chromium`.
+Set `OPL_CHROMIUM_BIN` when you need a specific browser executable.
+The checks report missing prerequisites and do not install them automatically.
 
 Shipping files live in `plugins/opl/`. Tests and fixtures live in `tests/`. Repository commands live in `tools/`.
 

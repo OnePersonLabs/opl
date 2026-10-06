@@ -6,17 +6,21 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
 import json
 import os
+import socket
 from pathlib import Path
 import sqlite3
 import subprocess
 import sys
 import tempfile
 import threading
+import time
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 import urllib.error
 import urllib.request
+from urllib.parse import parse_qs, urlsplit
+import uuid
 
 ROOT = Path(__file__).resolve().parents[3]
 SCRIPTS = ROOT / "plugins/opl/skills/human-collaboration/scripts"
@@ -68,19 +72,20 @@ class NetworkTests(unittest.TestCase):
             route.sendto.assert_not_called()
 
     def test_phone_links_match_the_actual_bind_and_keep_pairing_token(self):
-        from urllib.parse import urlsplit
+        guid = str(uuid.uuid4())
         for host in ("192.168.8.223", "fd00::123"):
-            links = connection_links(host, 2345, "private-token")
+            links = connection_links(host, 2345, "private-token", guid)
             parsed = urlsplit(links["lan_url"])
             self.assertEqual(parsed.hostname, host)
             self.assertEqual(parsed.port, 2345)
             self.assertEqual(parsed.fragment, "token=private-token")
+            self.assertEqual(parse_qs(parsed.query), {"guid": [guid]})
             self.assertEqual(links["lan_ip"], host)
-        local = connection_links("127.0.0.1", 2345, "private-token")
+        local = connection_links("127.0.0.1", 2345, "private-token", guid)
         self.assertEqual(local["access"], "local-only")
         self.assertIsNone(local["lan_url"])
         self.assertIsNone(local["lan_ip"])
-        self.assertEqual(urlsplit(connection_links("0.0.0.0", 2345, "private-token")["url"]).hostname, "127.0.0.1")
+        self.assertEqual(urlsplit(connection_links("0.0.0.0", 2345, "private-token", guid)["url"]).hostname, "127.0.0.1")
 
 
 class InboxTests(unittest.TestCase):
@@ -591,6 +596,7 @@ class HttpTests(InboxTests):
         self.server.shutdown(); self.server.server_close(); self.thread.join()
 
     def request(self, path, data=None, headers=None):
+        path += ("&" if "?" in path else "?") + "guid=" + self.server.guid
         request = urllib.request.Request(self.base + path, data=json.dumps(data).encode() if data is not None else None,
                     headers={"Authorization": "Bearer " + self.server.token, "Content-Type": "application/json", **(headers or {})})
         return urllib.request.urlopen(request, timeout=3)
@@ -599,6 +605,52 @@ class HttpTests(InboxTests):
         for headers in ({"Authorization": "Bearer wrong"}, {"Origin": "http://evil.invalid"}, {"Host": "evil.invalid:1234"}):
             with self.assertRaises(urllib.error.HTTPError) as error: self.request("/api/inbox", headers=headers)
             self.assertIn(error.exception.code, (400,401))
+
+    def test_http_every_route_and_method_is_silent_without_current_guid(self):
+        cases = [(method, path) for method, path in (("GET", "/"), ("GET", "/app.js"),
+                 ("GET", "/style.css"), ("GET", "/favicon.ico"), ("POST", "/api/submit"),
+                 ("HEAD", "/"), ("OPTIONS", "/api/inbox"), ("DELETE", "/unknown"),
+                 ("WEIRD", "/api/inbox"))]
+        cases += [("GET", "/?guid=wrong"), ("GET", f"/?guid={self.server.guid}&guid=wrong")]
+        for method, path in cases:
+            with self.subTest(method=method, path=path), socket.create_connection(("127.0.0.1", self.server.server_port)) as peer:
+                peer.settimeout(0.08)
+                peer.sendall(f"{method} {path} HTTP/1.1\r\nHost: 127.0.0.1:{self.server.server_port}\r\nExpect: 100-continue\r\nContent-Length: 0\r\n\r\n".encode())
+                with self.assertRaises(socket.timeout):
+                    peer.recv(1)  # Neither an HTTP response nor an early EOF.
+        deadline = time.monotonic() + 2
+        while self.server.connections and time.monotonic() < deadline:
+            time.sleep(0.01)
+        self.assertEqual(self.server.connections, set())
+        self.assertEqual(json.load(self.request("/api/inbox"))["pending"], [])
+
+    def test_http_shutdown_releases_silent_clients_and_logs_redacted_activity(self):
+        with self.assertLogs("opl.human", level="INFO") as logs, socket.create_connection(("127.0.0.1", self.server.server_port)) as peer:
+            peer.settimeout(1)
+            peer.sendall(b"POST /api/submit?guid=wrong&secret=query-secret HTTP/1.1\r\nAuthorization: Bearer header-secret\r\n\r\nbody-secret")
+            with self.assertRaises(socket.timeout):
+                peer.recv(1)
+            with self.request("/api/service") as response:
+                self.assertEqual(response.status, 200)
+            self.server.shutdown()
+            self.assertEqual(peer.recv(1), b"")
+        recorded = "\n".join(logs.output)
+        self.assertIn("method=POST route=/api/submit gate=silent", recorded)
+        self.assertIn("response status=200", recorded)
+        for secret in (self.server.guid, self.server.token, "query-secret", "header-secret", "body-secret"):
+            self.assertNotIn(secret, recorded)
+
+    def test_http_start_guid_changes_and_index_carries_asset_gate(self):
+        with self.request("/") as response:
+            html = response.read().decode()
+        for asset in ("app.js", "style.css", "favicon.ico"):
+            self.assertIn(f"/{asset}?guid={self.server.guid}", html)
+        other = HumanServer(self.inbox, "127.0.0.1", 0)
+        try:
+            self.assertEqual(uuid.UUID(other.guid).version, 4)
+            self.assertNotEqual(other.guid, self.server.guid)
+        finally:
+            other.server_close()
 
     def test_http_cannot_publish_resolve_or_read_arbitrary_paths(self):
         item = self.publish()
@@ -653,17 +705,64 @@ class HttpTests(InboxTests):
         catalog = Catalog(self.workspace / "private-runtime")
         catalog.register(self.inbox)
         live = receipt(self.server, "127.0.0.1", catalog)
-        child = SimpleNamespace(pid=live["pid"], poll=lambda: None)
+        child = SimpleNamespace(pid=live["launcher_pid"] if os.name == "nt" else live["pid"], poll=lambda: None)
         with patch("service.ready", side_effect=[None, live]), patch("service.subprocess.Popen", return_value=child) as start:
             connected = connect(self.inbox, port=self.server.server_port, catalog=catalog)
             self.assertEqual(connected["url"], live["url"])
+            self.assertFalse(connected["reused"])
             arguments = start.call_args.args[0]
             self.assertEqual(arguments[arguments.index("--port") + 1], str(self.server.server_port))
             self.assertNotIn("shell", start.call_args.kwargs)
+            if os.name == "nt":
+                self.assertEqual(start.call_args.kwargs["creationflags"], subprocess.CREATE_NEW_CONSOLE)
+                self.assertIn("--console", arguments)
+                self.assertEqual(Path(arguments[0]).name, "conhost.exe")
+                self.assertNotIn("stdout", start.call_args.kwargs)
         failed = SimpleNamespace(pid=1, returncode=2, poll=lambda: 2)
         with patch("service.ready", return_value=None), patch("service.subprocess.Popen", return_value=failed):
             with self.assertRaisesRegex(InboxError, "failed to start"):
                 connect(self.inbox, port=self.server.server_port, catalog=catalog)
+
+    def test_http_connect_preserves_authenticated_legacy_listener_receipt_until_stopped(self):
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+        from service import ready
+        catalog = Catalog(self.workspace / "private-runtime")
+        catalog.register(self.inbox)
+        token = self.server.token
+
+        class LegacyHandler(BaseHTTPRequestHandler):
+            def do_GET(handler):
+                accepted = handler.path == "/api/service" and handler.headers.get("Authorization") == "Bearer " + token
+                body = json.dumps({"catalog_id": catalog.id, "wake_root": False}).encode()
+                handler.send_response(200 if accepted else 401)
+                handler.send_header("Content-Length", str(len(body)))
+                handler.end_headers()
+                handler.wfile.write(body)
+
+            def log_message(handler, *args):
+                pass
+
+        legacy = ThreadingHTTPServer(("127.0.0.1", 0), LegacyHandler)
+        worker = threading.Thread(target=legacy.serve_forever, daemon=True)
+        worker.start()
+        try:
+            old_receipt = {"catalog_id": catalog.id, "host": "127.0.0.1", "port": legacy.server_port,
+                           "url": f"http://127.0.0.1:{legacy.server_port}/#token={token}", "pid": 1234}
+            save_receipt(catalog, old_receipt)
+            path = catalog.directory / "service.json"
+            original = path.read_bytes()
+            with patch("service.subprocess.Popen") as start:
+                for requested_port in (legacy.server_port, self.server.server_port):
+                    with self.subTest(port=requested_port), self.assertRaisesRegex(InboxError, "legacy service.*stop that listener"):
+                        connect(self.inbox, port=requested_port, catalog=catalog)
+                    self.assertEqual(path.read_bytes(), original)
+                start.assert_not_called()
+            save_receipt(catalog, {**old_receipt, "url": old_receipt["url"].replace(token, "wrong-token")})
+            self.assertIsNone(ready(catalog, "127.0.0.1", legacy.server_port))
+        finally:
+            legacy.shutdown(); legacy.server_close(); worker.join()
+        save_receipt(catalog, old_receipt)
+        self.assertIsNone(ready(catalog, "127.0.0.1", legacy.server_port))
 
     def test_http_unavailable_workspace_keeps_healthy_reads_and_registry_recovery(self):
         catalog = Catalog(self.workspace / "private-runtime")

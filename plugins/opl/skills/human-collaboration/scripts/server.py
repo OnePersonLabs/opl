@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import ipaddress
 import json
+import logging
 import os
 from pathlib import Path
 import secrets
@@ -12,15 +13,20 @@ import socket
 import sqlite3
 import subprocess
 import sys
+import threading
+import uuid
 from urllib.parse import parse_qs, urlsplit
 
 from inbox import Conflict, Inbox, InboxError, MAX_TEXT, label, now, text
 from catalog import Catalog
 
 WEB = Path(__file__).resolve().parent.parent / "web"
+ACTIVITY = logging.getLogger("opl.human")
 STATIC = {"/": ("index.html", "text/html; charset=utf-8"),
           "/app.js": ("app.js", "text/javascript; charset=utf-8"),
           "/style.css": ("style.css", "text/css; charset=utf-8")}
+ROUTES = set(STATIC) | {"/favicon.ico", "/api/inbox", "/api/service", "/api/item", "/api/source",
+                        "/api/draft", "/api/submit", "/api/contribute", "/api/action"}
 
 
 def notify(inbox: Inbox, submission: str, *, retry: bool = False, thread: str | None = None) -> dict:
@@ -42,6 +48,7 @@ def notify(inbox: Inbox, submission: str, *, retry: bool = False, thread: str | 
     message = (f"Human contribution {label(receipt['item'])}/{submission} is saved in "
                f"{json.dumps(str(inbox.root))}. Use $opl:human-collaboration to inspect and claim it. "
                "Preserve its reviewed revision. Reconcile already-claimed effects; do not replay them.")
+    ACTIVITY.info("notification state=attempting")
     try:
         # Reuse OPL's existing Windows/POSIX executable resolution, not a new
         # guessed shell protocol. No human reply text enters the command line.
@@ -62,6 +69,7 @@ def notify(inbox: Inbox, submission: str, *, retry: bool = False, thread: str | 
     with inbox.transaction() as db:
         db.execute("UPDATE submissions SET queue=? WHERE id=?", (json.dumps(status), submission))
         inbox._event(db, receipt["item"], "notification", {"submission": submission, **status})
+    ACTIVITY.info("notification state=%s", status["state"])
     return status
 
 
@@ -76,9 +84,13 @@ class HumanServer(ThreadingHTTPServer):
         self.inbox = inbox
         self.catalog = catalog or Catalog(inboxes=[inbox])
         self.token = token or secrets.token_urlsafe(32)
+        self.guid = str(uuid.uuid4())
         if len(self.token) < 32:
             raise InboxError("authentication tokens must contain at least 32 characters")
         self.wake = wake
+        self.connections: set[socket.socket] = set()
+        self.connection_lock = threading.Lock()
+        self.stopping = False
         self.notifier = ThreadPoolExecutor(max_workers=1, thread_name_prefix="human-inbox-wake")
         super().__init__((host, port), HumanHandler)
 
@@ -89,7 +101,24 @@ class HumanServer(ThreadingHTTPServer):
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
         super().server_bind()
 
+    def stop_connections(self) -> None:
+        # A denied request has no deadline or response. Release its reader only
+        # on peer disconnection or when this listener stops.
+        with self.connection_lock:
+            self.stopping = True
+            connections = list(self.connections)
+        for connection in connections:
+            try:
+                connection.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass  # The peer may have disconnected after the snapshot.
+
+    def shutdown(self) -> None:
+        self.stop_connections()
+        super().shutdown()
+
     def server_close(self) -> None:
+        self.stop_connections()
         super().server_close()
         self.notifier.shutdown(wait=True, cancel_futures=True)
 
@@ -100,7 +129,65 @@ class HumanHandler(BaseHTTPRequestHandler):
 
     def setup(self) -> None:
         super().setup()
-        self.connection.settimeout(8)
+        self.guid_verified = False
+        with self.server.connection_lock:
+            if self.server.stopping:
+                self.connection.shutdown(socket.SHUT_RDWR)
+            else:
+                self.server.connections.add(self.connection)
+
+    def finish(self) -> None:
+        try:
+            super().finish()
+        finally:
+            with self.server.connection_lock:
+                self.server.connections.discard(self.connection)
+
+    def handle(self) -> None:
+        try:
+            super().handle()
+        except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
+            pass  # Peer termination is the normal end of a silent request.
+
+    def verify_guid(self) -> bool:
+        words = self.raw_requestline.decode("iso-8859-1").split()
+        method = words[0] if words and words[0] in {"GET", "POST", "HEAD", "PUT", "PATCH", "DELETE", "OPTIONS", "CONNECT", "TRACE"} else "OTHER"
+        try:
+            parsed = urlsplit(words[1]) if len(words) > 1 else urlsplit("")
+            values = parse_qs(parsed.query, keep_blank_values=True).get("guid", [])
+            valid = len(values) == 1 and secrets.compare_digest(values[0].encode("utf-8"), self.server.guid.encode("ascii"))
+            route = parsed.path if parsed.path in ROUTES else "unknown-route"
+        except ValueError:
+            valid, route = False, "invalid-route"
+        ACTIVITY.info("request method=%s route=%s gate=%s", method, route, "accepted" if valid else "silent")
+        if valid:
+            self.guid_verified = True
+            self.connection.settimeout(8)
+            return True
+        self.close_connection = True
+        self.connection.settimeout(None)
+        try:
+            while self.connection.recv(65536):
+                pass  # Discard incoming bytes; never answer a denied request.
+        except (ConnectionResetError, ConnectionAbortedError):
+            pass
+        ACTIVITY.info("silent request released")
+        return False
+
+    def parse_request(self) -> bool:
+        # Base parsing can emit errors or 100 Continue. Gate before it runs,
+        # including unknown methods, malformed headers and ordinary static files.
+        self.guid_verified = False
+        return self.verify_guid() and super().parse_request()
+
+    def send_error(self, code: int, message: str | None = None, explain: str | None = None) -> None:
+        # The standard handler rejects an oversized request line before parsing.
+        if self.guid_verified or self.verify_guid():
+            super().send_error(code, message, explain)
+
+    def send_response(self, code: int, message: str | None = None) -> None:
+        ACTIVITY.info("response status=%s", code)
+        super().send_response(code, message)
 
     def log_message(self, format: str, *args: object) -> None:
         # Never log credentials, request bodies, source paths, or URL queries.
@@ -148,7 +235,10 @@ class HumanHandler(BaseHTTPRequestHandler):
             return
         if parsed.path in STATIC:
             name, mime = STATIC[parsed.path]
-            self.respond(200, (WEB / name).read_bytes(), mime)
+            content = (WEB / name).read_bytes()
+            if name == "index.html":
+                content = content.replace(b"__SERVER_GUID__", self.server.guid.encode("ascii"))
+            self.respond(200, content, mime)
             return
         try:
             self.authenticate()

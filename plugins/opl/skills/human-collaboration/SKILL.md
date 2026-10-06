@@ -30,7 +30,7 @@ root opens the inbox before preparing contributions:
    project inbox, enrolls the session, and registers the project in the local
    catalog. Preserve reviewed revisions, claims, and outcomes. Do not enroll
    other chats or projects, or transfer another root's work.
-2. Run `connect --host lan --allow-lan` to start or reuse the background service
+2. Run `connect --host lan --allow-lan` to start or reuse the service
    on the host's detected private LAN IPv4 address. Honor a user-requested bind;
    use `connect --host 127.0.0.1` for local-only access. Read
    Delivery and phone access below for network and notification options.
@@ -38,7 +38,8 @@ root opens the inbox before preparing contributions:
    host browser. Report the host's `lan_ip` and render `lan_url` as a clickable
    Markdown link, such as `[Open human inbox](<returned-url>)`. For `local-only`
    access, link `url` and state that a phone cannot reach this listener. Report
-   that the service remains running after the turn and keep its bearer token
+   that the service remains running after the turn. On Windows, its terminal
+   shows request activity; closing that window stops the server. Keep its bearer token
    private. If connection fails, report the error and evidence
    path; enrollment remains saved. Reconcile a possibly running process before
    retrying startup.
@@ -186,6 +187,11 @@ new user turns and Stop re-surface unresolved work. Notifications are not claims
 Enrollment persists. Invoke `$opl:human-collaboration` again to enroll a different
 root or restart a stopped service. The service stays running when the agent turn
 ends. Add `--wake-root` to `connect` only when queue notifications are requested.
+On Windows, `connect` opens a visible terminal owned by the server process.
+The terminal shows startup, incoming requests, response status, and shutdown.
+It also prints the full pairing URL, including the GUID and bearer token.
+Logs omit URL queries, authentication headers, and request bodies. Close the
+terminal window or press Ctrl+C to stop the server.
 `serve` still runs a foreground service for an individual workspace;
 `serve --catalog <runtime-directory>` serves registered workspaces. The default is `127.0.0.1:8766`.
 Report the pairing link only after the service responds. It contains a bearer token; keep it
@@ -198,6 +204,15 @@ specific LAN/VPN address, use that literal IP and `--allow-lan`. Do not change f
 service, or change global Codex configuration merely to make this work.
 HTTP is not encrypted; use a trusted local network or private VPN. This is a
 single-user local service, not an Internet-facing multi-user application.
+
+Each server start creates a new GUID, a random identifier in the pairing URL's
+`guid` query parameter. Every request must include that GUID, including page,
+asset, and API requests. Without the current GUID, the server sends no response
+and holds the connection until the client disconnects or the server stops.
+The browser and readiness helper carry it automatically. API requests also
+require the bearer token. After a restart, open the new pairing link; an old
+link cannot load the page. A held connection uses a request thread and socket
+until it closes. Keep this service on the authorized trusted network.
 
 The browser starts with a newest-first combined message feed. It can filter to
 one session. Lists show available projects and sessions that have contributions,

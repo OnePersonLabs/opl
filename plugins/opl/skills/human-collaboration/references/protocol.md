@@ -108,7 +108,12 @@ roots exist, the source must be explicit. Inspect partially applied work before 
 outcomes remain evidence of prior work, not instructions to replay it.
 
 `connect` records the workspace in a private local catalog and starts or reuses
-one background service. On Windows its runtime files are under
+one service. On Windows, the server owns a visible terminal window. Closing that
+window terminates the server; Ctrl+C also stops it. The terminal and `service.log`
+show startup, incoming requests, response status, and shutdown. Activity logs omit
+query parameters, authentication headers, and request bodies. The terminal also
+prints the full pairing URL with its GUID and bearer token; `service.log` does
+not record that URL. Runtime files are under
 `%LOCALAPPDATA%/OPL/human-inbox`; `OPL_HUMAN_RUNTIME` selects an isolated runtime
 for deterministic tests. The catalog stores workspace locations and connection
 information; project SQLite stores remain authoritative for contributions.
@@ -206,7 +211,17 @@ relative files, at most 12 per brief and 512 KiB per file. Reply and brief text 
 bounded at 128 KiB. Raw HTML is displayed as text. SVG diagrams are image content,
 not executable DOM. Source links distinguish reviewed snapshots from current files.
 
-All API requests require the pairing bearer token. Host and Origin checks reject
+Each server start creates a fresh random GUID in the pairing URL's `guid` query
+parameter. All HTTP methods and routes require that GUID before the server can
+send any response. This includes the page, browser assets, favicon, unknown
+routes, and API requests. A missing, wrong, or repeated GUID parameter receives
+no response; the connection remains open until the client disconnects or the
+server stops. Held connections consume request threads and sockets. Disconnection
+and server shutdown release them. There is no request timeout for this gate.
+The page carries the GUID into asset URLs, API requests, and navigation. The
+readiness probe uses the GUID saved in the private service receipt.
+
+All API requests also require the pairing bearer token. Host and Origin checks reject
 cross-origin requests; no CORS or cookie authorization is provided. Non-loopback
 binding requires `--allow-lan`. The bind must be a literal IP; localhost names are
 accepted by the HTTP host check. Pairing tokens are session-scoped and change on

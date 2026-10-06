@@ -72,6 +72,9 @@ def parser() -> argparse.ArgumentParser:
         serve.add_argument("--wake-root", action="store_true")
         serve.add_argument("--register-workspace", action="append", default=[], help="additional initialized workspace to register locally")
         serve.add_argument("--catalog", help=argparse.SUPPRESS)
+        if name == "serve":
+            serve.add_argument("--console", action="store_true", help=argparse.SUPPRESS)
+            serve.add_argument("--managed", action="store_true", help=argparse.SUPPRESS)
     return value
 
 
@@ -86,6 +89,9 @@ def read_json(path: str) -> dict:
 def main() -> int:
     args = parser().parse_args()
     try:
+        if args.command == "serve" and args.console:
+            from service import open_console
+            open_console()
         if args.command == "hook":
             payload = json.load(sys.stdin)
             if not isinstance(payload, dict):
@@ -141,7 +147,7 @@ def main() -> int:
             elif command in {"serve", "connect"}:
                 from server import HumanServer
                 from catalog import Catalog
-                from service import connect, receipt, save_receipt, validate_address
+                from service import configure_activity, connect, receipt, save_receipt, validate_address
                 if args.host == "lan":
                     if not args.allow_lan:
                         raise InboxError("LAN startup requires --allow-lan")
@@ -158,17 +164,29 @@ def main() -> int:
                     result = connect(inbox, args.host, args.port, allow_lan=args.allow_lan, wake=args.wake_root, catalog=catalog)
                     print(json.dumps(result, ensure_ascii=False, indent=2))
                     return 0
+                # Managed POSIX startup already redirects stderr to service.log.
+                activity = configure_activity(catalog, file_log=not args.managed)
+                activity.info("starting listener host=%s port=%s", args.host, args.port)
                 server = HumanServer(inbox, args.host, args.port, wake=args.wake_root, catalog=catalog)
                 value = receipt(server, args.host, catalog)
                 if catalog.directory is not None:
                     save_receipt(catalog, value)
-                print(json.dumps(value), flush=True)
+                if not (args.console or args.managed):
+                    print(json.dumps(value), flush=True)
+                elif args.console:
+                    # The user needs a usable link in the visible window. Keep
+                    # it out of the activity logger and its persistent log file.
+                    print("Pairing URL: " + value["url"], flush=True)
+                activity.info("listener ready host=%s port=%s pid=%s; Ctrl+C stops the server%s",
+                              args.host, server.server_port, os.getpid(), "; closing this window also stops it" if args.console else "")
                 try:
                     server.serve_forever()
                 except KeyboardInterrupt:
                     pass
                 finally:
+                    activity.info("stopping listener")
                     server.server_close()
+                    activity.info("listener stopped")
                 return 0
             else:
                 raise InboxError("unsupported command")
