@@ -31,6 +31,9 @@ user-level file; do not add it to `plugins/opl/AGENTS.md`.
 
 ## Tests
 
+Keep test output quiet on success; report only a brief pass summary or nothing.
+On failure, report errors and relevant diagnostics.
+
 Do not add tests for skill invocation. Do not add tests that consume AI tokens
 without explicit permission. If tests are required to prove new behavior or
 validate significant modifications, one-time smoke tests are allowed. Batch and

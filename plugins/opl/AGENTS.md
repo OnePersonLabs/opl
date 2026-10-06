@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 45 -->
+<!-- opl-instructions-version: 46 -->
 
 # Core Behavior
 
@@ -52,6 +52,9 @@ adding dependent complexity. Do not claim user comprehension from an agent's
 readability judgment or require approval for every routine edit.
 
 ## Tests
+
+Keep test output quiet on success; report only a brief pass summary or nothing.
+On failure, report errors and relevant diagnostics.
 
 Do not add tests for skill invocation. Do not add tests that consume AI tokens
 without explicit permission. If tests are required to prove new behavior or

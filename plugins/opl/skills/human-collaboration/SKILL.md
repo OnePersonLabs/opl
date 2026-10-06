@@ -34,11 +34,10 @@ root opens the inbox before preparing contributions:
    on the host's detected private LAN IPv4 address. Honor a user-requested bind;
    use `connect --host 127.0.0.1` for local-only access. Read
    Delivery and phone access below for network and notification options.
-3. After authenticated readiness succeeds, open the returned pairing URL in the
-   host browser. Do this whether `connect` starts the service or reuses a running
-   service. Always report the URL returned by `connect`; do not omit it because
-   the service was already running. This URL contains the current GUID and bearer
-   token. Report the host's `lan_ip` and render `lan_url` as a clickable Markdown
+3. After authenticated readiness succeeds, whether `connect` starts or reuses the
+   service, open its returned pairing URL in the host browser and report it. This
+   URL contains the current GUID and bearer token. Report the host's `lan_ip` and
+   render `lan_url` as a clickable Markdown
    link, such as `[Open human inbox](<returned-url>)`. For `local-only`
    access, link `url` and state that a phone cannot reach this listener. Report
    that the service remains running after the turn. On Windows, its terminal
