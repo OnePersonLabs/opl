@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 51 -->
+<!-- opl-instructions-version: 52 -->
 
 # Core Behavior
 
@@ -169,6 +169,14 @@ New repository-wide guards require explicit user approval unless the user reques
 
 - Write `--` instead of an em dash.
 - Always double-quote Mermaid node labels. Example: `CP["Existing TypeScript control-plane services"]`.
+
+### Answer format tags
+
+- Tags at the start of a prompt, in any order, set the form of the answer. No tags, or no tag on an axis, means balanced.
+- Length: `.` short (answer only: 1-3 sentences or one code block), `..` balanced (answer plus minimal reasoning), `...` detailed (context, options, trade-offs, examples, edge cases).
+- Level: `!` dumb (newcomer: explain it like I'm a golden retriever, analogies, simple to complex), `!!` balanced (practitioner: terms without definitions, basics skipped), `!!!` expert (specialist: challenge me, precise terminology, deep dive).
+- Example: `. !!! how does prompt caching work?` = short answer for an expert.
+- Tags change only the form. Language, honesty, and action rules still apply.
 
 ## Conflicting Instructions
 
