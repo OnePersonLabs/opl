@@ -11,6 +11,10 @@ specifies another location.
 Interpret an unqualified reference to `AGENTS.md` as `plugins/opl/AGENTS.md`
 unless the user explicitly specifies another file.
 
+After completing a standalone, one-shot unit of work and its required checks,
+commit and push that unit, then run `$opl:refresh-local-plugins`, unless the user
+specifies a different delivery boundary.
+
 OPL's `plugins/opl/AGENTS.md` has an independent positive integer instruction
 revision in its `opl-instructions-version` marker. Increment and stage that
 revision whenever changing instruction content. The pre-commit hook compares
