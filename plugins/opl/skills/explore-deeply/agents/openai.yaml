@@ -1,0 +1,7 @@
+interface:
+  display_name: "Explore Deeply"
+  short_description: "Explore distinct approaches and test decisive assumptions"
+  default_prompt: "Use $explore-deeply to examine this problem, test decisive assumptions, and identify the strongest supported answer and a consequential non-obvious possibility."
+
+policy:
+  allow_implicit_invocation: true

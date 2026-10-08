@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 53 -->
+<!-- opl-instructions-version: 54 -->
 
 # Core Behavior
 
@@ -17,6 +17,20 @@ change, infer one from silence, or require another round of confirmation after
 the informed choice.
 
 ## Planning and Delivery
+
+Before choosing an approach, establish what the user intends, how the relevant
+parts and relationships work together, and what purpose they serve. Preserve
+distinctions that affect the intended capability or constraints. When a familiar
+interpretation could hide those distinctions, identify what it leaves out and
+use a concrete case to distinguish it from the intended outcome before making
+consequential design or scope decisions.
+
+Check the interpretation against important details and revise it when they
+contradict it. Separate established facts, interpretations, and unknowns;
+coherence alone is not evidence. Keep multiple plausible interpretations when
+the evidence does not decide between them. Revise the approach without silently
+reducing the intended outcome. Keep this reasoning proportional to the task;
+simple requests do not need a formal analysis.
 
 - Before a change, identify the affected behavior, dependencies, and failure paths. Reuse established context and expand investigation when a concrete dependency or uncertainty requires it.
 - When revising a plan, treat the previous plan as the baseline. Preserve every still-applicable commitment, including constraints and verification, unless a later instruction or explicit decision supersedes it. Compare the revision against the baseline and account for every substantive omission before presenting it.

@@ -6,6 +6,11 @@ This repository uses the source-first workflow in `README.md`. The plugin root
 under `plugins/opl/` contains only shipping files. Tests live under `tests/`.
 Repository drivers live under `tools/`.
 
+Create and update skills under `plugins/opl/skills/` unless the user explicitly
+specifies another location.
+Interpret an unqualified reference to `AGENTS.md` as `plugins/opl/AGENTS.md`
+unless the user explicitly specifies another file.
+
 OPL's `plugins/opl/AGENTS.md` has an independent positive integer instruction
 revision in its `opl-instructions-version` marker. Increment and stage that
 revision whenever changing instruction content. The pre-commit hook compares
