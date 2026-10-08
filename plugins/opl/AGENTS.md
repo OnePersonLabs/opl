@@ -1,4 +1,4 @@
-<!-- opl-instructions-version: 52 -->
+<!-- opl-instructions-version: 53 -->
 
 # Core Behavior
 
@@ -27,6 +27,14 @@ Keep the complete intended outcome visible while finishing connected behavior
 through its actual consumer. Choose work that closes an observable product gap.
 Do not accumulate independently checked components without integrating them, or
 treat an intermediate demonstration as completion of the larger requirement.
+
+At substantive planning, work start, resumption, and completion, read the user's
+workflow policy at `<active CODEX_HOME>/opl/github-workflow.md` (use `~/.codex`
+when `CODEX_HOME` is unset). Honor repository tracker and read-only overrides.
+When GitHub is the selected tracker, use `$opl:github-workflow` automatically.
+The assigned root owns issue writes; workers return proposals and evidence.
+Confirm the repository target, publication scope, and authorized operations
+before writing. Skill discovery and authentication do not grant authority.
 
 ## Human Comprehensibility
 
@@ -135,6 +143,9 @@ symptoms to special-case. Redesign or rearchitect when that gives a clearer,
 more maintainable result within the authorized scope.
 
 Apply DRY to duplicated knowledge and rules, not merely similar-looking code.
+Implement common behavior once across consumers and platforms. Share domain
+rules, state, UI, and contracts; use narrow adapters for genuine platform
+differences instead of duplicate feature paths.
 Prefer explicit responsibilities and a simple flow over abstractions that hide
 different behavior. Apply YAGNI to speculative machinery; preserve structures
 that give clear shape or support to established future requirements. Identify

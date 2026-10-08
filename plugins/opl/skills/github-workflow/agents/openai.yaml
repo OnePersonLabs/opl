@@ -1,0 +1,6 @@
+interface:
+  display_name: "GitHub Workflow"
+  short_description: "Maintain authorized GitHub planning and work status"
+  default_prompt: "Use $opl:github-workflow to reconcile the selected repository's issues, priorities, dependencies, and completion evidence under its workflow policy."
+policy:
+  allow_implicit_invocation: true
